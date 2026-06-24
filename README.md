@@ -28,7 +28,7 @@ VERSION      current integer protocol_version
 - **Framing:** newline-delimited JSON over TCP (TLS on WAN). One object per line, UTF-8.
 - **Versioning:** integer `protocol_version`, asserted in `hello`/`ack`; mismatch ⇒ hard reject. Additive changes do **not** bump the version; a rename/retype/removal bumps it and must break CI here (golden fixtures).
 - **Schemas are strict** (`additionalProperties: false`) so drift is caught in CI. **Runtime parsers must be lenient** — ignore unknown fields — so a future additive field doesn't break an older binary at runtime.
-- **Units (lerobot-native):** joint `<motor>.pos` normalized [-100,100], gripper [0,100]; base `x.vel` m/s / `theta.vel` rad/s; `jog` axes normalized rate [-1,1]; currents signed raw int. The active normalization mode is declared in `ack.norm_mode`.
+- **Units (lerobot-native):** joint `<motor>.pos` normalized [-100,100], gripper [0,100]; base `x.vel` m/s / `theta.vel` **deg/s**; `jog` axes normalized rate [-1,1]; currents signed raw int. The active normalization mode is declared in `ack.norm_mode`. (`z_lift` is a Nori extension, present only in `jog` — not in the lerobot `.pos`/`.vel` dicts.)
 
 ## CI
 ```bash
