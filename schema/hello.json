@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/hello.json",
+  "title": "hello",
+  "description": "Client -> daemon handshake opener.",
+  "type": "object",
+  "required": ["type", "protocol_version", "mode", "input_mode"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "hello" },
+    "protocol_version": { "type": "integer", "minimum": 1 },
+    "mode": { "enum": ["lan", "wan"] },
+    "input_mode": { "enum": ["keyboard", "vr"] },
+    "bus_choice": { "enum": ["1", "2", "3"], "default": "3" },
+    "token": {
+      "type": "string",
+      "description": "Scoped session token. Required when mode == 'wan'."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "wan" } } },
+      "then": { "required": ["token"] }
+    }
+  ]
+}

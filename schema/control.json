@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/control.json",
+  "title": "control",
+  "description": "Client -> daemon control frame (~50 Hz). May bundle any subset of jog/action/reset/clutch. seq is for ordering/dedup; send_ms is for latency display only -- neither feeds the safety watchdog.",
+  "type": "object",
+  "required": ["type", "seq"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "control" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "send_ms": { "type": "number", "description": "Client send time (epoch ms). Latency display only." },
+    "jog": { "$ref": "#/$defs/jog" },
+    "action": { "$ref": "#/$defs/action" },
+    "reset": { "$ref": "#/$defs/reset" },
+    "clutch": { "$ref": "#/$defs/clutch" }
+  },
+  "$defs": {
+    "rate": { "type": "number", "minimum": -1, "maximum": 1 },
+    "armJog": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "6-DOF task space (rpi4 SimpleTeleopArm). x/y -> IK(shoulder_lift,elbow_flex); pitch -> wrist_flex coupling.",
+      "properties": {
+        "shoulder_pan": { "$ref": "#/$defs/rate" },
+        "x": { "$ref": "#/$defs/rate" },
+        "y": { "$ref": "#/$defs/rate" },
+        "pitch": { "$ref": "#/$defs/rate" },
+        "wrist_roll": { "$ref": "#/$defs/rate" },
+        "gripper": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "jog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "left_arm": { "$ref": "#/$defs/armJog" },
+        "right_arm": { "$ref": "#/$defs/armJog" },
+        "head": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "pan": { "$ref": "#/$defs/rate" }, "tilt": { "$ref": "#/$defs/rate" } }
+        },
+        "base": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "linear": { "$ref": "#/$defs/rate" }, "angular": { "$ref": "#/$defs/rate" } }
+        },
+        "z_lift": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "description": "Absolute lerobot action dict (laptop-side IK path). Keys are <motor>.pos / <axis>.vel in the declared norm_mode.",
+      "additionalProperties": false,
+      "patternProperties": { "^[a-z0-9_]+\\.(pos|vel)$": { "type": "number" } }
+    },
+    "reset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "left_arm": { "type": "boolean" },
+        "right_arm": { "type": "boolean" },
+        "head": { "type": "boolean" }
+      }
+    },
+    "clutch": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "VR squeeze-to-move (M2). When false, the laptop mapper emits zero jog.",
+      "properties": {
+        "left": { "type": "boolean" },
+        "right": { "type": "boolean" }
+      }
+    }
+  }
+}
