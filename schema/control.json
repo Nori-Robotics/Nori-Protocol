@@ -36,17 +36,13 @@
       "properties": {
         "left_arm": { "$ref": "#/$defs/armJog" },
         "right_arm": { "$ref": "#/$defs/armJog" },
-        "head": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": { "pan": { "$ref": "#/$defs/rate" }, "tilt": { "$ref": "#/$defs/rate" } }
-        },
         "base": {
           "type": "object",
           "additionalProperties": false,
           "properties": { "linear": { "$ref": "#/$defs/rate" }, "angular": { "$ref": "#/$defs/rate" } }
         },
-        "z_lift": { "$ref": "#/$defs/rate" }
+        "left_lift": { "$ref": "#/$defs/rate" },
+        "right_lift": { "$ref": "#/$defs/rate" }
       }
     },
     "action": {
@@ -60,8 +56,7 @@
       "additionalProperties": false,
       "properties": {
         "left_arm": { "type": "boolean" },
-        "right_arm": { "type": "boolean" },
-        "head": { "type": "boolean" }
+        "right_arm": { "type": "boolean" }
       }
     },
     "clutch": {

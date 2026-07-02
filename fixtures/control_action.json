@@ -8,5 +8,5 @@
     "x.vel": 0.3,
     "theta.vel": 0.0
   },
-  "reset": { "left_arm": false, "right_arm": false, "head": true }
+  "reset": { "left_arm": false, "right_arm": true }
 }
