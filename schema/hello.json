@@ -10,7 +10,7 @@
     "type": { "const": "hello" },
     "protocol_version": { "type": "integer", "minimum": 1 },
     "mode": { "enum": ["lan", "wan"] },
-    "input_mode": { "enum": ["keyboard", "vr"] },
+    "input_mode": { "enum": ["keyboard", "vr", "leader"] },
     "bus_choice": { "enum": ["1", "2", "3"], "default": "3" },
     "token": {
       "type": "string",

@@ -12,6 +12,7 @@
     "send_ms": { "type": "number", "description": "Client send time (epoch ms). Latency display only." },
     "jog": { "$ref": "#/$defs/jog" },
     "action": { "$ref": "#/$defs/action" },
+    "leader_action_deg": { "$ref": "#/$defs/leaderActionDeg" },
     "reset": { "$ref": "#/$defs/reset" },
     "clutch": { "$ref": "#/$defs/clutch" }
   },
@@ -50,6 +51,12 @@
       "description": "Absolute lerobot action dict (laptop-side IK path). Keys are <motor>.pos / <axis>.vel in the declared norm_mode.",
       "additionalProperties": false,
       "patternProperties": { "^[a-z0-9_]+\\.(pos|vel)$": { "type": "number" } }
+    },
+    "leaderActionDeg": {
+      "type": "object",
+      "description": "Absolute SO101 leader-arm targets: body joints in DEGREES around the calibrated leader zero; grippers normalized [0,100]. Keys may be <motor> or <motor>.pos. The daemon converts to normalized units via the follower calibration, applies a server-side slew guard (NORI_LEADER_SLEW), then feeds the same TeleopArm P-control/safety path as `action`. Applied after `action` when both are present (leader wins on shared keys).",
+      "additionalProperties": false,
+      "patternProperties": { "^[a-z0-9_]+(\\.pos)?$": { "type": "number" } }
     },
     "reset": {
       "type": "object",
