@@ -2,6 +2,7 @@
 
 The **single source of truth** for the JSON wire contract between the Nori C++ on-board daemon (`NoriCoreAgent`, in `NoriTeleop/rpi5/`) and the laptop app (`NoriLeLab`). Consumed by both as a **git submodule** so neither repo owns a private copy.
 
+- **Writing your own client:** `CLIENTS.md` — the transport, the handshake, and a minimal example.
 - Human spec / rationale: `NoriTeleop/docs/nori_protocol_schema.md`.
 - Architecture context: `onboard_pi_plan.md` §f / R8.
 
