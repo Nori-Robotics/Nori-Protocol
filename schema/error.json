@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "type": { "const": "error" },
-    "code": { "enum": ["version_mismatch", "bus_init", "auth", "internal"] },
+    "code": { "enum": ["version_mismatch", "bus_init", "auth", "internal", "startup_positions", "arm_offline"] },
     "msg": { "type": "string" },
     "fatal": { "type": "boolean", "default": false }
   }
