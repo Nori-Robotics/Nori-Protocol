@@ -25,6 +25,16 @@ VERSION      current integer protocol_version
 | D→C | `telemetry` | `schema/telemetry.json` |
 | D→C | `error` | `schema/error.json` |
 
+### Proposed (additive, no version bump — not yet emitted by the daemon)
+| Direction | type | schema | notes |
+|---|---|---|---|
+| C→D | `control.action_id` (optional field) | `schema/control.json` | correlates a motion frame to its `action_status` |
+| D→C | `action_status` | `schema/action_status.json` | Phase E / G1 — action-completion lifecycle (`accepted→active→done\|blocked\|clamped\|timeout`) |
+| D→C | `perception` | `schema/perception.json` | Phase F / G3 — structured world-state (`objects[{label,confidence,bbox?,xyz?,id?}]`) from an on-Pi detector |
+
+These validate under `validate.py` today (fixtures included) but are **PROPOSED**: the app/SDK side
+is built, the daemon side is pending (see `docs/daemon_followups.md` in the NoriTeleop repo).
+
 ## Rules
 - **Framing:** newline-delimited JSON over TCP (TLS on WAN). One object per line, UTF-8.
 - **Versioning:** integer `protocol_version`, asserted in `hello`/`ack`; mismatch ⇒ hard reject. Additive changes do **not** bump the version; a rename/retype/removal bumps it and must break CI here (golden fixtures).
