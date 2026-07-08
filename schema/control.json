@@ -10,6 +10,7 @@
     "type": { "const": "control" },
     "seq": { "type": "integer", "minimum": 0 },
     "send_ms": { "type": "number", "description": "Client send time (epoch ms). Latency display only." },
+    "action_id": { "type": "string", "description": "PROPOSED (Phase E / G1). Correlator for a motion-bearing frame; the daemon echoes it in action_status transitions (accepted->active->done|blocked|clamped|timeout). Optional; ignored if the daemon predates Phase E." },
     "jog": { "$ref": "#/$defs/jog" },
     "action": { "$ref": "#/$defs/action" },
     "leader_action_deg": { "$ref": "#/$defs/leaderActionDeg" },
