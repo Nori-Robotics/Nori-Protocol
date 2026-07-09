@@ -47,7 +47,9 @@ The daemon is a **line-delimited-JSON TCP server**:
    ```json
    {"type":"hello","protocol_version":1,"mode":"lan","input_mode":"keyboard"}
    ```
-   For `mode:"wan"` a scoped `token` is **required** (the daemon rejects WAN without one).
+   `token` is **required whenever the daemon has an agent token configured**
+   (provisioned robots: `/etc/nori/agent.token`) — any mode, or the hello is rejected with
+   `ack{accepted:false, error:"unauthorized"}`. Dev daemons without a token file skip the check.
 
 2. **`ack`** (daemon → client) — `accepted:true` carries what you need to drive:
    `descriptor` (the exact `joints` / `base` / `aux` / `cameras` names and their `ranges`),

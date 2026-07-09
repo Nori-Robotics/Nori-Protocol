@@ -14,13 +14,7 @@
     "bus_choice": { "enum": ["1", "2", "3"], "default": "3" },
     "token": {
       "type": "string",
-      "description": "Scoped session token. Required when mode == 'wan'."
+      "description": "Agent token (value of the daemon's /etc/nori/agent.token). Enforcement is daemon-state-dependent, so it cannot be expressed as a schema conditional: a daemon WITH a token file rejects any hello whose token mismatches (ack accepted:false, error 'unauthorized'), regardless of mode; a daemon WITHOUT one (dev checkout) ignores the field."
     }
-  },
-  "allOf": [
-    {
-      "if": { "properties": { "mode": { "const": "wan" } } },
-      "then": { "required": ["token"] }
-    }
-  ]
+  }
 }
