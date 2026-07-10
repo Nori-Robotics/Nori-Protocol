@@ -133,6 +133,68 @@ with socket.create_connection(ROBOT, timeout=5) as s:
 Swap `shoulder_pan` for any name in `ack.descriptor.joints`, add `base`/`left_lift`/`right_lift`,
 or send `{"type":"command","name":"estop"}` at any time.
 
+## Camera frames over the LAN (companion channel)
+
+The `:7777` control plane carries **no video** — by design (image bytes would stall control
+frames). On the same LAN, raw per-camera frames are available on a **companion channel**: the
+robot's capture bridge publishes every camera on its own ZeroMQ PUB socket.
+
+**Availability:** only when the robot runs **multi-camera mode** (the bridge is the single
+camera owner there; single-camera robots have no bridge) — and note the bridge is normally
+**spawned when a teleop operator connects and stopped when they disconnect** (cameras capture
+only during a session, to save power). So either keep an operator session open while you
+consume frames, or ask the robot's operator to run the bridge standalone
+(`--external-bridge` mode). Ask us for the robot's camera list if you can't read its
+`cameras.json`.
+
+**Ports:** `NORI_CAM_BASE_PORT + index` (base default **5555**), where `index` is the camera's
+position in the robot's `cameras.json`. The camera *names* are the same roles the ack's
+`descriptor.cameras` reports — e.g. with `["front","left_wrist","right_wrist"]`:
+front→5555, left_wrist→5556, right_wrist→5557.
+
+**Wire format:** one ZMQ message per frame —
+
+```
+b"<name> <capture_monotonic_seconds>\n" + <complete JPEG bytes>
+```
+
+Frames are the camera's **native MJPEG capture** (no re-encode, no compositing, no WebRTC);
+resolution/rate are whatever the robot is configured to capture. Timestamps are the robot's
+CLOCK_MONOTONIC — good for inter-frame timing, **not** wall-clock synced.
+
+**Minimal consumer (Python + pyzmq):**
+
+```python
+import zmq
+
+ctx = zmq.Context.instance()
+sock = ctx.socket(zmq.SUB)
+sock.setsockopt(zmq.SUBSCRIBE, b"")
+sock.setsockopt(zmq.CONFLATE, 1)   # keep only the newest frame — do this
+sock.setsockopt(zmq.RCVHWM, 1)
+sock.connect("tcp://<ROBOT_IP>:5555")
+
+while True:
+    msg = sock.recv()                  # one message = one frame
+    header, jpg = msg.split(b"\n", 1)  # b"<name> <ts>"
+    name, ts = header.decode().split(" ", 1)
+    # jpg is a complete JPEG, e.g.:
+    # frame = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_COLOR)
+```
+
+**Semantics:** latest-wins on both ends (publisher and the `CONFLATE` subscriber above) — a
+slow consumer drops frames rather than accumulating lag. Subscribe per camera; multiple
+subscribers are fine (the robot's own compositor and recorder are two of them). Keep it to a
+few subscribers — each one costs the robot a network write per frame.
+
+**Security posture:** these sockets are **unauthenticated** and LAN-scoped — the same trusted-
+network assumption as direct `:7777`. Fine on a dev bench; do not port-forward them. (The
+robot operator can restrict the bind interface via `NORI_CAM_BIND`.)
+
+**Stability:** this is an internal interface we're promoting for LAN development. The wire
+format above is stable in practice and we'll flag any change here, but it is not yet under
+`protocol_version` guarantees — check with us before building a product on it.
+
 ## Remote / WAN
 
 Direct `:7777` is a plaintext control socket for **trusted networks**. To drive a robot over the
