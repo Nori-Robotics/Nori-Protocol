@@ -195,6 +195,53 @@ robot operator can restrict the bind interface via `NORI_CAM_BIND`.)
 format above is stable in practice and we'll flag any change here, but it is not yet under
 `protocol_version` guarantees — check with us before building a product on it.
 
+## Telemetry over the LAN (companion channel)
+
+The daemon's `:7777` port serves **one client at a time** (single-writer safety model), so a
+tool that only wants to *watch* joint state — a persistent 3D scene, a logger, a plotter —
+shouldn't take that slot (and shouldn't need WebRTC). Instead: while a teleop session is
+live, the robot's media bridge **re-publishes every frame the daemon sends** on one ZeroMQ
+PUB socket. Read-only; nothing you send reaches the robot.
+
+**Availability:** session-scoped, like the camera sockets above — the tap exists **only while
+an operator session is connected** (the bridge process is per-session). No session, no
+telemetry: the daemon itself isn't streaming either.
+
+**Port:** `NORI_TELEM_PORT` (default **7788**); bind interface follows `NORI_CAM_BIND` unless
+`NORI_TELEM_BIND` overrides it. The robot operator may have disabled it (`NORI_TELEM_PORT=0`).
+
+**Wire format:** one ZMQ message per daemon frame — the **raw NDJSON line** exactly as the
+daemon emitted it (no re-serialization, full ~50 Hz, *not* the ~15 Hz throttled copy the
+WebRTC operator sees). Mostly `{"type":"telemetry",...}` with the same `state` / `currents`
+fields described in step 4 above; `ack` / `error` / `action_status` frames ride through too —
+filter on `type`. (`perception` frames do NOT appear here: they are a media-side sidecar
+merged onto the WebRTC data channel, never emitted by the daemon on `:7777`.)
+
+**Minimal consumer (Python + pyzmq):**
+
+```python
+import zmq, json
+
+ctx = zmq.Context.instance()
+sock = ctx.socket(zmq.SUB)
+sock.setsockopt(zmq.SUBSCRIBE, b"")
+sock.setsockopt(zmq.CONFLATE, 1)   # keep only the newest frame — do this
+sock.connect("tcp://<ROBOT_IP>:7788")
+
+while True:
+    m = json.loads(sock.recv())
+    if m.get("type") == "telemetry":
+        print(m["state"])          # every "<joint>.pos" + base "x.vel"/"theta.vel"
+```
+
+**Semantics:** latest-wins — the publisher drops rather than queues for a slow subscriber,
+and `CONFLATE=1` on your end keeps only the newest frame (skip it only if you're logging and
+genuinely want every frame; then read fast). Multiple subscribers are fine.
+
+**Security posture:** unauthenticated and LAN-scoped — identical to the camera sockets: fine
+on a dev bench, never port-forward it. Same stability caveat as above: promoted-internal, not
+yet under `protocol_version` guarantees.
+
 ## Remote / WAN
 
 Direct `:7777` is a plaintext control socket for **trusted networks**. To drive a robot over the
