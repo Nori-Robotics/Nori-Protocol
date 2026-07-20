@@ -30,7 +30,12 @@
       "additionalProperties": false,
       "properties": {
         "safety": { "enum": ["ok", "safe_hold", "latched"] },
-        "latch_reason": { "enum": ["obstruction", "estop", null] },
+        "latch_reason": {
+          "type": ["string", "null"],
+          "pattern": "^(estop|stall|obstruction)(:.*)?$",
+          "description": "Why motion is blocked, as \"<kind>:<detail>\": \"estop:<trip reason>\" (operator command / face button) or \"stall:<motor>\" (first obstruction-stalled joint). Absent when neither is latched. The bare forms carry no detail and exist for older daemons; \"obstruction\" is legacy and no longer emitted.",
+          "examples": ["estop:face_button", "stall:right_arm_wrist_roll"]
+        },
         "link": { "enum": ["lan", "wan"] },
         "watchdog": { "enum": ["ok", "warn", "stop"] },
         "rtt_ms": { "type": "number", "minimum": 0 }
