@@ -38,7 +38,13 @@
         },
         "link": { "enum": ["lan", "wan"] },
         "watchdog": { "enum": ["ok", "warn", "stop"] },
-        "rtt_ms": { "type": "number", "minimum": 0 }
+        "rtt_ms": { "type": "number", "minimum": 0 },
+        "motor_faults": {
+          "type": "object",
+          "description": "Per-motor problem state currently asserted: <motor> -> either a decoded hardware fault \"<names> (0xNN)\" (e.g. \"overload,overheat (0x24)\", the raw hex authoritative and names best-effort), OR the exact sentinel \"no response\" meaning that motor did not answer the bus for several reads (dropped / lost power). Only problem motors appear; a motor absent from this map AND answering is healthy — the \"no response\" sentinel exists so a dropped motor is not indistinguishable from a healthy one.",
+          "patternProperties": { "^[a-z0-9_]+$": { "type": "string" } },
+          "additionalProperties": false
+        }
       },
       "required": ["safety", "link", "watchdog"]
     }

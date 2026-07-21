@@ -10,7 +10,7 @@
     "type": { "const": "error" },
     "code": {
       "type": "string",
-      "description": "Machine reason. Known: version_mismatch, bad_hello, bad_type, bus_init, auth, unauthorized, internal, startup_positions, arm_offline, arm_recovered, bus_lost, overtemp, overcurrent, motor_fault, motor_recovered. Open-ended so newer daemons can add codes; clients should show `msg` and not switch exhaustively on `code`.",
+      "description": "Machine reason. Known: version_mismatch, bad_hello, bad_type, bus_init, auth, unauthorized, internal, startup_positions, arm_offline, arm_recovered, bus_lost, overtemp, overcurrent, motor_fault, motor_unreadable, motor_recovered. Open-ended so newer daemons can add codes; clients should show `msg` and not switch exhaustively on `code`.",
       "examples": ["motor_fault", "overtemp", "bus_lost"]
     },
     "msg": {
