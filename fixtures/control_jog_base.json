@@ -1,0 +1,7 @@
+{
+  "type": "control",
+  "seq": 41,
+  "jog": {
+    "base": { "linear": 1.0, "angular": 0.5 }
+  }
+}

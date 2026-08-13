@@ -1,0 +1,19 @@
+{
+  "type": "control",
+  "seq": 42,
+  "jog": {
+    "left_arm": {
+      "shoulder_pitch": 0.5,
+      "shoulder_roll": 0.0,
+      "bicep_yaw": -0.25,
+      "elbow_pitch": 0.0,
+      "forearm_yaw": 0.0,
+      "wrist_pitch": 0.0,
+      "wrist_roll": 0.0,
+      "gripper": 1.0
+    },
+    "right_arm": { "x": 0.4, "y": 0.0, "pitch": -0.2, "shoulder_pan": 0.1 },
+    "left_lift": -0.3,
+    "right_lift": 0.0
+  }
+}

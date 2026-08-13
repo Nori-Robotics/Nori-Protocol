@@ -1,0 +1,57 @@
+{
+  "type": "ack",
+  "accepted": true,
+  "protocol_version": 1,
+  "model": "L3",
+  "capabilities": ["task_jog", "record"],
+  "norm_mode": "range_m100_100",
+  "watchdog_profile": { "t_warn_ms": 300, "t_stop_ms": 1000 },
+  "descriptor": {
+    "joints": [
+      "left_arm_bicep_yaw.pos",
+      "left_arm_elbow_pitch.pos",
+      "left_arm_forearm_yaw.pos",
+      "left_arm_gripper.pos",
+      "left_arm_shoulder_pitch.pos",
+      "left_arm_shoulder_roll.pos",
+      "left_arm_wrist_pitch.pos",
+      "left_arm_wrist_roll.pos",
+      "right_arm_bicep_yaw.pos",
+      "right_arm_elbow_pitch.pos",
+      "right_arm_forearm_yaw.pos",
+      "right_arm_gripper.pos",
+      "right_arm_shoulder_pitch.pos",
+      "right_arm_shoulder_roll.pos",
+      "right_arm_wrist_pitch.pos",
+      "right_arm_wrist_roll.pos"
+    ],
+    "base": ["x.vel", "theta.vel"],
+    "aux": ["left_lift", "right_lift"],
+    "cameras": ["left_wrist", "right_wrist", "overhead", "front"],
+    "ranges": {
+      "left_arm_shoulder_pitch.pos": [-100, 100],
+      "left_arm_shoulder_roll.pos": [-100, 100],
+      "left_arm_bicep_yaw.pos": [-100, 100],
+      "left_arm_elbow_pitch.pos": [-100, 100],
+      "left_arm_forearm_yaw.pos": [-100, 100],
+      "left_arm_wrist_pitch.pos": [-100, 100],
+      "left_arm_wrist_roll.pos": [-100, 100],
+      "left_arm_gripper.pos": [0, 100],
+      "right_arm_shoulder_pitch.pos": [-100, 100],
+      "right_arm_shoulder_roll.pos": [-100, 100],
+      "right_arm_bicep_yaw.pos": [-100, 100],
+      "right_arm_elbow_pitch.pos": [-100, 100],
+      "right_arm_forearm_yaw.pos": [-100, 100],
+      "right_arm_wrist_pitch.pos": [-100, 100],
+      "right_arm_wrist_roll.pos": [-100, 100],
+      "right_arm_gripper.pos": [0, 100]
+    }
+  },
+  "initial_state": {
+    "left_arm_shoulder_pitch.pos": -2.1,
+    "right_arm_shoulder_pitch.pos": 1.8,
+    "right_arm_gripper.pos": 0.0,
+    "x.vel": 0.0,
+    "theta.vel": 0.0
+  }
+}

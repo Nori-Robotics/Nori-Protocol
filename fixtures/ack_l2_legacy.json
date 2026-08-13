@@ -1,0 +1,23 @@
+{
+  "type": "ack",
+  "accepted": true,
+  "protocol_version": 1,
+  "model": "L2",
+  "capabilities": [
+    "task_jog",
+    "leader_action_deg",
+    "lift_targets",
+    "record",
+    "policy_stream",
+    "call"
+  ],
+  "norm_mode": "range_m100_100",
+  "watchdog_profile": { "t_warn_ms": 150, "t_stop_ms": 500 },
+  "initial_state": {
+    "left_arm_shoulder_pan.pos": 0.0,
+    "right_arm_shoulder_pan.pos": 12.4,
+    "right_arm_gripper.pos": 3.0,
+    "x.vel": 0.0,
+    "theta.vel": 0.0
+  }
+}

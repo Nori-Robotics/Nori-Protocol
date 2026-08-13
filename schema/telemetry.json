@@ -20,6 +20,12 @@
       "description": "Signed raw Present_Current per motor (virtual-tactile / haptics).",
       "patternProperties": { "^[a-z0-9_]+$": { "type": "integer" } }
     },
+    "servo_temps": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-motor servo CASE temperature in whole degrees C, from the daemon's 1 Hz over-temp sweep (arms + lifts + wheels). A motor ABSENT from the map failed its read that cycle -- unknown, never assume cool. The whole field is omitted on the mock and when the over-temp guard is disabled (NORI_OVERTEMP_C=0). Added to the daemon 2026-08-09; schema'd 2026-08-12.",
+      "patternProperties": { "^[a-z0-9_]+$": { "type": "integer" } }
+    },
     "loop_hz": { "type": "number" },
     "errors": { "type": "integer", "minimum": 0 },
     "stalled": { "type": "array", "items": { "type": "string" } },
