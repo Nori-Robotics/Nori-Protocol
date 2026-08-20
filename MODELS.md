@@ -27,7 +27,11 @@ app adapt instead of hardcoding DOF."*
    the `<side>_arm_` prefix and `.pos` suffix to get the jog short name. Do not
    assume any particular joint exists.
 3. **`capabilities`** → gate optional verbs. Absent field means *unknown*, not
-   *none*: a robot predating the field must be assumed legacy.
+   *none*: a robot predating the field must be assumed legacy. The list is a
+   UNION: the daemon lists what it honours and a bridge appends what it adds
+   before forwarding, so `fixtures/daemon/ack_l2_legacy.json` shows the
+   post-bridge set a client actually receives, not what the C++ daemon alone
+   emits. Do not infer which component provides a capability.
 
 `ranges` scales your input; it does not validate it. Out-of-range values are
 clamped robot-side and reported via `action_status: clamped`, never rejected.
@@ -42,7 +46,7 @@ current models and a client has no other way to discover them:
 | Capability | L2 | L3 |
 |---|---|---|
 | `task_jog` — cylindrical/task-space arm jog | yes | yes (base-frame twist; `shoulder_pan` yaws about base Z) |
-| `record` — dataset recording verbs | yes | yes (richer verb set) |
+| `record` — dataset recording verbs | yes | yes (same 11 verbs; `discard` differs in MEANING — see session/record.json) |
 | `leader_action_deg` — absolute leader degrees | yes | **no** — dropped as unmappable |
 | `lift_targets` — absolute `<side>_lift.pos` in mm | yes | **no** — silently ignored |
 | `policy_stream` | yes | **no** |
@@ -80,7 +84,7 @@ a per-model quirk fixed in shared code becomes every other model's bug.
 > compensate; a later app change began negating `linear` as well, which the
 > gateway does not undo. Adopting this convention means the app stops negating
 > and the L3 gateway stops un-negating, in one coordinated change. Until then,
-> `fixtures/control_jog_base.json` is the target, not a description of what
+> `fixtures/daemon/control_jog_base.json` is the target, not a description of what
 > either side currently emits.
 
 ## Cameras are not in the descriptor path
@@ -93,7 +97,9 @@ which is authoritative and independent of the descriptor. Clients crop tiles
 from the composite using that frame. This is why L2 and L3 behave identically in
 the app despite L2 sending no descriptor at all, and why a mock must NOT derive
 its layout from `descriptor.cameras` — real robots derive it from the live
-compositor, and a mock that does otherwise hides layout bugs.
+compositor. This is a rule to adopt, not a description of today: the TS mock
+(`mock/sim.ts` cameraLayoutFrame) derives its layout from the descriptor, and the
+L3 gateway was written against that mock.
 
 ## Current models
 
@@ -101,13 +107,13 @@ compositor, and a mock that does otherwise hides layout bugs.
 (`shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper`),
 two dedicated lift servos with a millimetre height frame, `hello` handshake with
 hard version rejection, single-client NDJSON arbitration. Sends no descriptor.
-Fixture: `fixtures/ack_l2_legacy.json`.
+Fixture: `fixtures/daemon/ack_l2_legacy.json`.
 
 **L3** — 16 joints, 7-DOF arms plus gripper
 (`shoulder_pitch, shoulder_roll, bicep_yaw, elbow_pitch, forearm_yaw,
 wrist_pitch, wrist_roll, gripper`), lifts implemented as arm shoulder-lift
 joints (jog only), no `hello` (auth moved upstream to the signaling room),
-authority-lease arbitration. Fixture: `fixtures/ack_l3.json`.
+authority-lease arbitration. Fixture: `fixtures/daemon/ack_l3.json`.
 
 Only `wrist_roll` and `gripper` are common to both vocabularies. That near-zero
 overlap is why descriptor-driven keymapping works in practice — but it is a

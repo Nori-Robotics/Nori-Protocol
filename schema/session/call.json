@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/call.json",
+  "title": "call",
+  "description": "Client -> robot. Two-way audio control. Intercepted by the bridge like `video`; the motion daemon never sees it.\n\nCapability-gated: advertise \"call\" in ack.capabilities. Robot-side mute state comes back on daemon_status.robot_local_mic_muted, not here -- robots boot muted and are unmuted by a person at the robot, so a client cannot unmute them remotely.\n\nA frame may carry `state`, `mic_muted`, or both: joining with an explicit initial mute is one frame, and a later mute toggle is a frame with `mic_muted` alone.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "call"
+    },
+    "state": {
+      "enum": [
+        "join",
+        "leave"
+      ]
+    },
+    "mic_muted": {
+      "type": "boolean",
+      "description": "Operator mic muted. A local track toggle; never a renegotiation."
+    },
+    "clip": {
+      "type": "boolean",
+      "description": "This join exists only to play a one-shot audio clip, not to open a conversation. Implies a muted mic and an immediate leave when the clip ends."
+    },
+    "robot_mic_muted": {
+      "type": "boolean",
+      "description": "Reserved: operator mutes the ROBOT's mic. Implemented by the L2 bridge. Distinct from `mic_muted`, which is the operator's own mic. The robot's resulting state is reported back on daemon_status.robot_local_mic_muted."
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "state"
+      ]
+    },
+    {
+      "required": [
+        "mic_muted"
+      ]
+    },
+    {
+      "required": [
+        "robot_mic_muted"
+      ]
+    }
+  ]
+}

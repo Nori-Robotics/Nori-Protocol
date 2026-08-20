@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/policy_stream.json",
+  "title": "policy_stream",
+  "description": "Client -> robot. Drives the robot's always-on policy streamer, which pushes camera frames to a policy runner.\n\nCapability-gated: advertise \"policy_stream\" in ack.capabilities. A robot without it ignores these frames silently and no reply ever arrives, so a client MUST time out rather than wait forever. Do not pipeline commands. Replies carry no correlation id, and the control channel is UNORDERED as well as unreliable (ordered=false, max-retransmits=0 on both stacks), so FIFO waiter-matching in a client is a convention with no transport guarantee behind it -- one lost or reordered reply desynchronises it.",
+  "type": "object",
+  "required": [
+    "type",
+    "action"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "policy_stream"
+    },
+    "action": {
+      "enum": [
+        "start",
+        "stop",
+        "status"
+      ]
+    },
+    "dest": {
+      "enum": [
+        "laptop",
+        "cloud"
+      ],
+      "description": "Where frames are pushed. Meaningful on start."
+    },
+    "target": {
+      "type": "string",
+      "description": "Destination address for `dest`, when it is not implied by the session."
+    }
+  }
+}

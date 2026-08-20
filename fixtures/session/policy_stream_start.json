@@ -1,0 +1,5 @@
+{
+  "type": "policy_stream",
+  "action": "start",
+  "dest": "laptop"
+}

@@ -1,0 +1,6 @@
+{
+  "type": "daemon_status",
+  "state": "offline",
+  "reason": "unauthorized",
+  "detail": "gateway: motion authority lease not held"
+}

@@ -1,0 +1,5 @@
+{
+  "type": "record",
+  "action": "episode_start",
+  "task": "fold the towel"
+}

@@ -1,0 +1,31 @@
+# The contract validates itself on every push.
+#
+# This is the cheapest of the guarantees available to us and it only covers
+# INTERNAL consistency: schemas parse, fixtures match them, every message schema
+# is exercised and closed. It cannot see whether any implementation agrees --
+# that requires each consumer to feed real output through these schemas in its
+# own suite, which is why `servo_temps` drifted for three weeks with this repo
+# entirely "green".
+name: validate
+
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # >=4.18 pulls in `referencing`, which is what resolves cross-file $ref
+      # between a shared _core fragment and the message schemas that extend it.
+      # Without it validate.py still runs but reports that refs went unchecked.
+      - run: pip install "jsonschema>=4.18"
+      - run: python validate.py

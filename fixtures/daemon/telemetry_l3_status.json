@@ -1,0 +1,13 @@
+{
+  "type": "telemetry",
+  "ts_ns": 1719240000123456789,
+  "state": {
+    "left_arm_shoulder_pitch.pos": -2.1
+  },
+  "status": {
+    "safety": "latched",
+    "watchdog": "ok",
+    "latch_reason": "estop"
+  },
+  "pi_temp_c": 52.4
+}

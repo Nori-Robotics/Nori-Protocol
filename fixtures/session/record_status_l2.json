@@ -1,0 +1,15 @@
+{
+  "type": "record_status",
+  "ok": true,
+  "recording": true,
+  "session_open": true,
+  "session": "20260729T201358Z-nori-l2-0000",
+  "episode": "20260729T201358Z-nori-l2-0000/episode-0001",
+  "episodes_kept": 2,
+  "free_gb": 41.6,
+  "dropped_frames_est": {
+    "front": 0,
+    "right_wrist": 3
+  },
+  "queue_drops": 0
+}

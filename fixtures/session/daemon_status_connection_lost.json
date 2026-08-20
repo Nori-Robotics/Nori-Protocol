@@ -1,0 +1,6 @@
+{
+  "type": "daemon_status",
+  "state": "offline",
+  "reason": "connection_lost",
+  "detail": "daemon closed the control socket"
+}

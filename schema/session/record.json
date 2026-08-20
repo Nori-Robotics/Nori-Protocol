@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/record.json",
+  "title": "record",
+  "description": "Client -> robot. Dataset recording verbs. Every verb draws exactly ONE record_status reply, so a client may await each one -- but replies carry no correlation id, so a client MUST NOT have two record verbs in flight at once. After a timeout, drop the waiter AND treat the next unsolicited status as unowned, or the correlation goes permanently off by one.\n\nTHE VERBS ARE NOT ALL SAFE. Read the per-verb notes below before wiring a UI to any of them: `session_discard` / `discard` / `discard_last` DESTROY recorded data, and on L2 `stop` closes the whole session rather than just the episode. Two verbs that look adjacent can be opposites.\n\nCanonical lifecycle:\n  session_start -> episode_start -> (episode_stop | episode_discard) -> ... -> session_end\n\nThe robot is resilient to a dropped session_start: an episode_start with no open session opens one implicitly.",
+  "type": "object",
+  "required": ["type", "action"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "record" },
+    "action": {
+      "enum": [
+        "session_start",
+        "episode_start",
+        "episode_stop",
+        "episode_discard",
+        "session_end",
+        "session_discard",
+        "status",
+        "start",
+        "stop",
+        "discard",
+        "discard_last"
+      ],
+      "description": "Semantics, and they differ per stack where noted -- verified against the L2 recorder (rpi5/media/recorder.py) and the L3 gateway (nori_gateway/protocol.py).\n\nKEEPS DATA:\n  session_start   open a collection.\n  episode_start   open an episode (opens a session too if none is open).\n  episode_stop    finalise and KEEP the open episode.\n  session_end     close the session and keep it for shipping. On L2 a session that kept no episodes is removed, since there is nothing to ship.\n  status          read-only.\n\nDESTROYS DATA:\n  episode_discard   finalise and DROP the open episode.\n  session_discard   drop the ENTIRE open session, or -- if issued just after session_end -- the most recent one. On L2 this is shutil.rmtree. It refuses only if the session already reached `uploaded`. This is NOT a synonym for session_end; they are opposites. It is also NOT a legacy alias, despite riding next to them.\n\nLEGACY ALIASES, retained because deployed clients still send them:\n  start          L2/L3: open a session AND an episode.\n  stop           L3: finalise the episode. L2: finalise the episode AND END THE SESSION. A client using `stop` between episodes on an L2 gets a different session than it expects.\n  discard        alias for session_discard on L2 (destroys). On L3 it is folded into session_end (keeps).\n  discard_last   alias for session_discard on L2, targeting the most recent session.\n\nThe divergence in `discard` between stacks is real and unresolved: the same verb keeps data on one model and destroys it on the other. Prefer the explicit canonical verbs and do not build a UI on `discard`."
+    },
+    "task": {
+      "type": "string",
+      "description": "Free-text task label recorded with the episode. Meaningful only on the verbs that OPEN something (session_start, episode_start, legacy start); ignored elsewhere."
+    }
+  }
+}

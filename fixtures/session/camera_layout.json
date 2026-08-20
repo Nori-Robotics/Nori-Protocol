@@ -1,0 +1,11 @@
+{
+  "type": "camera_layout",
+  "cols": 2,
+  "rows": 2,
+  "tiles": [
+    "left_wrist",
+    "right_wrist",
+    "overhead",
+    "front"
+  ]
+}

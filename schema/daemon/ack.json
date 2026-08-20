@@ -1,69 +1,108 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nori.dev/protocol/ack.json",
+  "$id": "https://nori.dev/protocol/daemon/ack.json",
   "title": "ack",
   "description": "Daemon -> client handshake response. accepted=false carries an error and ends the session. This is the ONLY place a client learns what robot it is talking to: see `descriptor` (what it can move) and `capabilities` (what verbs it honours). Clients MUST derive behaviour from those, never from `model`.",
   "type": "object",
-  "required": ["type", "accepted"],
+  "required": [
+    "type",
+    "accepted"
+  ],
   "additionalProperties": false,
   "properties": {
-    "type": { "const": "ack" },
-    "accepted": { "type": "boolean" },
-    "protocol_version": { "type": "integer", "minimum": 1 },
+    "type": {
+      "const": "ack"
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "protocol_version": {
+      "type": "integer",
+      "minimum": 1
+    },
     "model": {
       "type": "string",
       "description": "ADVISORY ONLY. The robot's model/generation label (e.g. \"L2\", \"L3\"). Provided so logs, dataset provenance and bug reports can name the hardware. Clients MUST NOT branch behaviour on this value -- branch on `descriptor` and `capabilities` instead, so a new model works against an unmodified client. Deliberately not an enum: enumerating models here would mean a schema edit per model, which is exactly the coupling this field exists to avoid. Absent on robots predating the field."
     },
     "capabilities": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "uniqueItems": true,
-      "description": "Optional verbs this robot honours, beyond the always-present core (control jog, control action, command, telemetry). A client MUST treat an absent capability as unsupported, and MUST ignore an unrecognised entry rather than failing. This exists because capability differences are NOT expressible as DOFs: a descriptor cannot say whether absolute lift targets are accepted or whether two-way audio exists. Known values: \"task_jog\" (cylindrical/task-space arm jog), \"leader_action_deg\" (absolute leader-arm degrees), \"lift_targets\" (absolute <side>_lift.pos height targets in mm), \"record\" (dataset recording verbs), \"policy_stream\", \"call\" (two-way audio), \"perception\". Absent field means UNKNOWN, not none -- robots predating the field must be probed or assumed legacy."
+      "description": "Optional verbs this robot honours, beyond the always-present core (control jog, control action, command, telemetry). A client MUST treat an absent capability as unsupported, and MUST ignore an unrecognised entry rather than failing. This exists because capability differences are NOT expressible as DOFs: a descriptor cannot say whether absolute lift targets are accepted or whether two-way audio exists. Known values: \"task_jog\" (cylindrical/task-space arm jog), \"leader_action_deg\" (absolute leader-arm degrees), \"lift_targets\" (absolute <side>_lift.pos height targets in mm), \"record\" (dataset recording verbs), \"policy_stream\", \"call\" (two-way audio), \"perception\". Absent field means UNKNOWN, not none -- robots predating the field must be probed or assumed legacy. WHO FILLS THIS: it is a UNION built along the path. A daemon lists what it itself honours (task_jog, leader_action_deg, lift_targets); a bridge APPENDS what it adds on top (record, policy_stream, call) before forwarding, because the daemon cannot know whether a bridge in front of it does two-way audio. On a merged stack like the L3 gateway one process fills the whole list. A client therefore sees one flat list and must not infer which component provides a given capability."
     },
     "norm_mode": {
-      "enum": ["range_m100_100", "degrees"],
+      "enum": [
+        "range_m100_100",
+        "degrees"
+      ],
       "description": "Normalization mode of all .pos values in state/action."
     },
     "watchdog_profile": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "t_warn_ms": { "type": "number", "exclusiveMinimum": 0 },
-        "t_stop_ms": { "type": "number", "exclusiveMinimum": 0 }
+        "t_warn_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "t_stop_ms": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       },
-      "required": ["t_warn_ms", "t_stop_ms"]
+      "required": [
+        "t_warn_ms",
+        "t_stop_ms"
+      ]
     },
     "descriptor": {
       "type": "object",
       "additionalProperties": false,
       "description": "What this robot physically is. OPTIONAL, and its ABSENCE is meaningful: a robot that sends no descriptor is a legacy unit whose DOF vocabulary the client must already know (the L2 daemon is one -- see MODELS.md). Present-and-populated is the only case in which a client may drive DOFs it did not know about in advance.",
       "properties": {
-        "buses": { "type": "array", "items": { "type": "string" } },
+        "buses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "joints": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Every drivable \"<motor>.pos\" key. This is the authoritative joint vocabulary; a client must build its keymap from this rather than from a compiled-in list."
         },
         "base": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Base DOFs in the TELEMETRY namespace (\"x.vel\", \"theta.vel\"). WARNING: this is NOT the jog namespace. A control jog addresses the base as {\"base\":{\"linear\":r,\"angular\":r}} -- see control.json. The two vocabularies are different on purpose (telemetry reports measured axis velocities; jog expresses normalized drive intent) and confusing them yields a frame the robot parses as a full stop."
         },
         "aux": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Non-arm actuators addressable by jog, e.g. \"left_lift\"/\"right_lift\". A robot with lifts MUST list them here; leaving this empty while accepting lift jog makes the lifts undiscoverable and is a defect."
         },
         "cameras": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Camera roles, for logging and diagnostics ONLY. This does NOT drive video: the robot sends one composited H.264 track and describes its tiling in camera_layout.json, which is authoritative and independent of this field. Do not derive a layout from this list."
         },
         "ranges": {
           "type": "object",
           "additionalProperties": {
             "type": "array",
-            "items": { "type": "number" },
+            "items": {
+              "type": "number"
+            },
             "minItems": 2,
             "maxItems": 2
           },
@@ -74,14 +113,30 @@
     "initial_state": {
       "type": "object",
       "additionalProperties": false,
-      "patternProperties": { "^[a-z0-9_]+\\.(pos|vel)$": { "type": "number" } }
+      "patternProperties": {
+        "^[a-z0-9_]+\\.(pos|vel)$": {
+          "type": "number"
+        }
+      }
     },
-    "error": { "type": "string" }
+    "error": {
+      "type": "string"
+    }
   },
   "allOf": [
     {
-      "if": { "properties": { "accepted": { "const": false } } },
-      "then": { "required": ["error"] }
+      "if": {
+        "properties": {
+          "accepted": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ]
+      }
     }
   ]
 }

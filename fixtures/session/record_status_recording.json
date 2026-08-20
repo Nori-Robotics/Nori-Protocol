@@ -1,0 +1,9 @@
+{
+  "type": "record_status",
+  "ok": true,
+  "recording": true,
+  "session_open": true,
+  "episodes_kept": 2,
+  "episode": "episode-0003",
+  "free_gb": 41.6
+}

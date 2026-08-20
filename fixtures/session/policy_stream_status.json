@@ -1,0 +1,9 @@
+{
+  "type": "policy_stream_status",
+  "ok": true,
+  "streaming": true,
+  "dest": "laptop",
+  "fps_out": 14.8,
+  "frames_sent": 4412,
+  "dropped": 7
+}

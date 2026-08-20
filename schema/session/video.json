@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/video.json",
+  "title": "video",
+  "description": "Client -> robot. Encoder control for the composited video track. Intercepted by the bridge; it never reaches the motion daemon, which is why it is session-layer.\n\nExactly one of `state`, `bitrate` or `quality` per frame. All three are REQUESTS: the robot applies its own thermal and load ceiling on top and may deliver less than asked. There is no reply message -- observe the received track to see what actually happened.\n\nThe robot defaults to flowing, so a client that wants video need send nothing; only send `state: \"pause\"` when you actively want it stopped (power saving on a battery robot).",
+  "type": "object",
+  "required": ["type"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "video" },
+    "state": {
+      "enum": ["pause", "resume"],
+      "description": "Stop or restart the encoder. A pause requested before the control channel opened should be re-sent on open."
+    },
+    "bitrate": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "description": "Target encoder bitrate in kbps."
+    },
+    "quality": {
+      "enum": ["low", "normal"],
+      "description": "Named preset, for clients that do not run their own bitrate loop."
+    }
+  },
+  "oneOf": [
+    { "required": ["state"], "not": { "anyOf": [{ "required": ["bitrate"] }, { "required": ["quality"] }] } },
+    { "required": ["bitrate"], "not": { "anyOf": [{ "required": ["state"] }, { "required": ["quality"] }] } },
+    { "required": ["quality"], "not": { "anyOf": [{ "required": ["state"] }, { "required": ["bitrate"] }] } }
+  ]
+}

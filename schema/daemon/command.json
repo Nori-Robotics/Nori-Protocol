@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/daemon/command.json",
+  "title": "command",
+  "description": "Client -> daemon priority/latched command. estop hard-latches; reset_latch clears e_stop_latched and must be reachable even while in safe-stop.\n\nTWO SHAPES, both accepted. The `name` form is this schema's original dialect. The FLAG form ({\"estop\": true}) is what every deployed client actually sends -- the bridge forwards it verbatim and the L2 broker matches it -- so the schema admits it rather than describing a dialect nothing speaks.\n\nDANGER, L2 -- THE VALUE IS NOT READ. The broker decides by SUBSTRING on the raw line, so any command frame merely CONTAINING the text triggers the action regardless of its value:\n  {\"estop\": false}        trips the e-stop  (annoying, but fail-safe)\n  {\"reset_latch\": false}  CLEARS AN E-STOP  (fail-DANGEROUS)\nThe second is the one that matters: a client that helpfully sends every field with an explicit false, or that includes the word in a note field, silently un-latches a stopped robot. Both flags are therefore pinned to `const: true` here -- send the key or omit it, never send it false.\n\nAUTHENTICATION: there is NONE at this layer. This schema previously required a `token` alongside `reset_latch`, which read as an auth control but was never enforced -- the daemon parses `token` only out of `hello`, and the broker reads no token here at all. The requirement has been dropped so the schema describes reality, and the absence is recorded here rather than left implied: ANY client already admitted to the session can clear an E-STOP. The only gate is upstream -- Supabase RLS on the signaling room decides who may connect at all.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "command"
+    },
+    "name": {
+      "enum": [
+        "estop",
+        "reset_latch"
+      ]
+    },
+    "estop": { "const": true },
+    "reset_latch": { "const": true },
+    "token": {
+      "type": "string",
+      "description": "Legacy field. Not sent by any current client and not read by the daemon, which takes its agent token from `hello` at connect. Retained so an older client's frame still validates."
+    }
+  },
+  "anyOf": [
+    { "required": ["name"] },
+    { "required": ["estop"] },
+    { "required": ["reset_latch"] }
+  ]
+}

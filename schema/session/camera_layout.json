@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/camera_layout.json",
+  "title": "camera_layout",
+  "description": "Robot -> client. How to slice the single composited video track.\n\nThe robot encodes ALL of its cameras into one H.264 track (one encode is the only affordable choice on a Pi 5 with no hardware encoder), tiled left-to-right then top-to-bottom in `tiles` order. This frame is the ONLY authoritative description of that tiling -- in particular it is NOT derived from ack.descriptor.cameras, which is diagnostic metadata. A mock that generates its layout from the descriptor will hide real layout bugs.\n\nRepeated several times on channel open because the control channel is unreliable; repeats are idempotent and carry identical content. A robot with a single camera sends NO layout at all: absence means the whole frame is that one camera.\n\nA layout with empty `tiles` is INVALID per this schema. A client that receives one must reject it and KEEP any layout it already had -- never adopt it -- because one malformed repeat would otherwise blank the grid for the rest of the session.",
+  "type": "object",
+  "required": [
+    "type",
+    "cols",
+    "rows",
+    "tiles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "camera_layout"
+    },
+    "cols": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rows": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Camera role per tile, in row-major order. Length should be <= cols*rows; trailing grid cells with no tile are blank."
+    }
+  }
+}

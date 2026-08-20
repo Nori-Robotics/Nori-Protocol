@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/daemon_status.json",
+  "title": "daemon_status",
+  "description": "Robot -> client. Motion-stack health, as observed by the BRIDGE rather than reported by the daemon -- the daemon cannot tell you it is down. This is why the message is session-layer and has no daemon-layer counterpart.\n\nDistinct from transport health: the peer connection can be perfect while this reads offline, and in that state the robot DROPS every control frame. A client that jogs without checking this will see a robot that ignores it with no error anywhere.\n\nWhile offline the bridge rebroadcasts every few seconds (the channel is unreliable and there is no telemetry to imply liveness). Clients SHOULD de-duplicate on the whole triple state+reason+detail before surfacing it, so the repeats do not spam a UI or a log.",
+  "type": "object",
+  "required": [
+    "type",
+    "state"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "daemon_status"
+    },
+    "state": {
+      "enum": [
+        "online",
+        "offline"
+      ],
+      "description": "A frame with a missing or empty state MUST be dropped and the previous health kept -- never coerced to offline, which would invent an outage."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Machine-readable cause when offline. Open set -- treat an unknown value as 'offline for a reason this client does not model', never as an error. L3 sends \"unauthorized\" (motion authority refused) or \"unreachable\" (motion disabled or daemon down). The L2 bridge sends \"connection_lost\" when the daemon closes the socket -- the most common value in practice -- or forwards the daemon's own fatal error code, e.g. \"startup_positions\", \"bus_lost\", \"version_mismatch\"."
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable elaboration. For operators and logs; never parse it."
+    },
+    "robot_local_mic_muted": {
+      "type": "boolean",
+      "description": "Robot-side local mute. Robots boot muted and someone at the robot unmutes; this rides here rather than on telemetry because telemetry only flows while the daemon is UP, and a boot-muted robot with a down daemon would otherwise render an unmuted-looking call UI."
+    }
+  }
+}

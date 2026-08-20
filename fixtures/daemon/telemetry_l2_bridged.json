@@ -1,0 +1,19 @@
+{
+  "type": "telemetry",
+  "ts_ns": 1719240000123456789,
+  "state": {
+    "left_arm_shoulder_pan.pos": 12.4,
+    "x.vel": 0.0,
+    "theta.vel": 0.0
+  },
+  "loop_hz": 49.8,
+  "pi_temp_c": 51.2,
+  "status": {
+    "safety": "ok",
+    "watchdog": "ok",
+    "latch_reason": null
+  },
+  "robot_mic_live": true,
+  "robot_local_mic_muted": false,
+  "battery_percent": 87
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/daemon/link.json",
+  "title": "link",
+  "description": "Client -> daemon. NOT bridge-intercepted: it is forwarded verbatim and consumed by the motion daemon (L2: network_broker -> net_wd.configure), which is why it lives in daemon/ despite riding the data channel. The network path the client resolved to, which SELECTS THE ROBOT'S WATCHDOG PROFILE (LAN 150/500 ms vs WAN 300/1000 ms).\n\nThis is a safety input, not a hint. Reporting \"lan\" over a WAN path gives you a dead-man window tighter than your latency can hold, and the robot will ramp to a stop mid-motion; reporting \"wan\" on a LAN path merely loses responsiveness, so \"wan\" is the safe default when unsure.\n\nDerive it from the SELECTED ICE candidate pair: both candidates host => \"lan\", anything else (srflx via STUN, relay via TURN) => \"wan\". Prefer the pair the transport reports as selected, and fall back to a nominated pair only when it is also in state \"succeeded\" -- a nominated-but-failed pair can otherwise claim \"lan\" on a relayed link.\n\nSend it on control-channel open and again whenever the path changes; the ordering of channel-open and path-resolution is not guaranteed, so sending twice is expected.",
+  "type": "object",
+  "required": [
+    "type",
+    "mode"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "link"
+    },
+    "mode": {
+      "enum": [
+        "lan",
+        "wan"
+      ]
+    }
+  }
+}

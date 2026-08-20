@@ -28,8 +28,8 @@ The daemon is a **line-delimited-JSON TCP server**:
   connect TCP :7777
         │
         ▼
-  ── hello ──────────────►        first line MUST be a hello (schema/hello.json)
-        ◄──────── ack ──          accepted:true + descriptor, or accepted:false + error (schema/ack.json)
+  ── hello ──────────────►        first line MUST be a hello (schema/daemon/hello.json)
+        ◄──────── ack ──          accepted:true (+ descriptor on robots that send one; the L2 daemon does not), or accepted:false + error (schema/daemon/ack.json)
         │
         ▼   ┌─────────────────────────────────────────────┐
    loop │   │  ── control ─────►   jog frames @ ~50 Hz     │  keep sending, or the watchdog safe-stops
