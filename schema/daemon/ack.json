@@ -107,6 +107,70 @@
             "maxItems": 2
           },
           "description": "Authoritative [min, max] per \"<name>.pos\". Values outside are CLAMPED robot-side, never rejected, so use these to scale input rather than to pre-validate. A joint absent from this map has no advertised range and a client must not invent one."
+        },
+        "jog_scale": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How a normalized jog rate converts to real motion on THIS robot. Optional; absent means the robot does not advertise it and a client MUST NOT assume a value -- the L2 fleet is frozen and will never send this, so absent is the common case for years.\n\nWHAT IT PROMISES: the NOMINAL COMMANDED scale, i.e. multiply your normalized rate in [-1,1] by this to get the rate the robot will command under nominal conditions. It is NOT a guarantee of achieved velocity, and three things routinely make the achieved rate lower: the watchdog's warn state scales all motion to ZERO until control frames resume (watch telemetry.status.watchdog); an acceleration limit means short jogs never reach the rate at all; and on stacks running MoveIt Servo, singularity and collision scaling reduce it near limits. A client that needs the achieved rate must measure it from telemetry -- which is precisely what these units are chosen to allow.\n\nUNITS ARE PER NAMESPACE, and each is the unit of the thing it addresses, so that a client can close the loop against telemetry and verify what it got:\n  joints  normalized units per second, matching telemetry `state` and descriptor `ranges` (norm_mode units, so [-100,100] under range_m100_100). Deliberately NOT rad/s: telemetry reports normalized positions, so a rate in rad/s could not be checked against anything the client can see. Expect these to DIFFER per joint even when the robot uses one internal rad/s constant, because the normalized-to-physical scale is per joint.\n  lift    millimetres per second, matching the mm of `<side>_lift.pos` absolute targets.\n  task    SI -- metres/second for x and y, radians/second for pitch and shoulder_pan. These are Cartesian VERBS with no position key to match, so SI is the only sensible choice.\n  base    metres/second and radians/second.\n\nA namespace this robot does not drive is omitted, as is any individual key. Omission means UNKNOWN, never zero.",
+          "properties": {
+            "joints": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "description": "Per-joint rate at FULL deflection, keyed exactly as descriptor.joints (\"<side>_arm_<joint>.pos\"), in norm_mode units per second."
+            },
+            "task": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Task-space jog verbs at full deflection. Present only on a robot advertising the `task_jog` capability. Note these keys are VERBS, not joints -- \"shoulder_pan\" here is a task-space rotation and is not a joint name on every model.",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s"
+                },
+                "y": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s"
+                },
+                "pitch": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "rad/s"
+                },
+                "shoulder_pan": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "rad/s"
+                }
+              }
+            },
+            "base": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Base drive at full deflection. Keyed in the JOG namespace (linear/angular), not the telemetry namespace (x.vel/theta.vel) -- see descriptor.base.",
+              "properties": {
+                "linear": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s"
+                },
+                "angular": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "rad/s"
+                }
+              }
+            },
+            "lift": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Lift travel at full deflection, mm/s. One value: a robot with paired lifts drives both at the same rate, and A3 has a single central lift."
+            }
+          }
         }
       }
     },

@@ -87,6 +87,48 @@ a per-model quirk fixed in shared code becomes every other model's bug.
 > `fixtures/daemon/control_jog_base.json` is the target, not a description of what
 > either side currently emits.
 
+## Knowing how fast "1.0" is — `descriptor.jog_scale`
+
+A jog rate is normalized `[-1, 1]`, which is what makes one client work across models: the
+robot owns the mapping from "full deflection" to real motion, and a client that compiled in
+rad/s would be compiling in a per-model constant. The cost is that a script cannot ask for a
+*repeatable* speed, and cannot discover what it just asked for.
+
+`descriptor.jog_scale` closes that without adding a velocity command. It advertises the
+multiplier, so a client can convert its own desired rate into a normalized one and verify the
+result against telemetry.
+
+**It promises the NOMINAL COMMANDED scale, not achieved velocity.** Three things routinely
+make the real rate lower, and a client must expect all three:
+
+- the watchdog's `warn` state scales all motion to **zero** until control frames resume —
+  observable as `telemetry.status.watchdog`;
+- an acceleration limit means a short jog never reaches the rate at all;
+- on stacks running MoveIt Servo, singularity and collision scaling reduce it near limits.
+
+**Units are per namespace, and each matches the thing it addresses** so a client can close the
+loop:
+
+| Namespace | Unit | Matches |
+|---|---|---|
+| `joints` | norm_mode units/s | `telemetry.state` and `descriptor.ranges` |
+| `lift` | mm/s | the mm of `<side>_lift.pos` absolute targets |
+| `task` | m/s (x, y), rad/s (pitch, shoulder_pan) | nothing — Cartesian verbs have no position key |
+| `base` | m/s, rad/s | keyed `linear`/`angular`, the JOG namespace |
+
+Joints are deliberately **not** in rad/s. Telemetry reports normalized positions, so a rate in
+rad/s could not be checked against anything a client can see — and the whole point is
+verifiability. Expect the per-joint numbers to differ even where a robot uses one internal
+rad/s constant, because the normalized-to-physical scale is per joint.
+
+Omission means UNKNOWN, never zero — at every level. A missing block, a missing namespace and
+a missing joint key all mean "not advertised", and a client must not substitute a default. A
+rate of `0` is invalid rather than meaning "cannot move": a joint that cannot be jogged is
+expressed by leaving it out.
+
+**The L2 fleet is frozen and will never send this**, so absent is the common case and will
+stay that way. Any client using `jog_scale` needs a path for robots that do not publish it.
+
 ## Cameras are not in the descriptor path
 
 `descriptor.cameras` is diagnostic metadata. It does **not** drive video.

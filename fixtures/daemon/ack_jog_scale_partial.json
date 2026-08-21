@@ -1,0 +1,23 @@
+{
+  "type": "ack",
+  "accepted": true,
+  "protocol_version": 1,
+  "model": "A3",
+  "norm_mode": "range_m100_100",
+  "descriptor": {
+    "joints": [
+      "left_arm_gripper.pos"
+    ],
+    "ranges": {
+      "left_arm_gripper.pos": [
+        0.0,
+        100.0
+      ]
+    },
+    "jog_scale": {
+      "joints": {
+        "left_arm_gripper.pos": 22.0
+      }
+    }
+  }
+}

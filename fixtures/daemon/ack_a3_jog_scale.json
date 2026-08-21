@@ -1,0 +1,152 @@
+{
+  "type": "ack",
+  "accepted": true,
+  "protocol_version": 1,
+  "model": "A3",
+  "norm_mode": "range_m100_100",
+  "capabilities": [
+    "task_jog",
+    "lift_targets",
+    "record",
+    "policy_stream",
+    "call"
+  ],
+  "watchdog_profile": {
+    "t_warn_ms": 300,
+    "t_stop_ms": 1000
+  },
+  "descriptor": {
+    "buses": [
+      "left",
+      "right"
+    ],
+    "joints": [
+      "left_arm_shoulder_pitch.pos",
+      "left_arm_shoulder_roll.pos",
+      "left_arm_bicep_yaw.pos",
+      "left_arm_elbow_pitch.pos",
+      "left_arm_forearm_yaw.pos",
+      "left_arm_wrist_pitch.pos",
+      "left_arm_wrist_roll.pos",
+      "left_arm_gripper.pos",
+      "right_arm_shoulder_pitch.pos",
+      "right_arm_shoulder_roll.pos",
+      "right_arm_bicep_yaw.pos",
+      "right_arm_elbow_pitch.pos",
+      "right_arm_forearm_yaw.pos",
+      "right_arm_wrist_pitch.pos",
+      "right_arm_wrist_roll.pos",
+      "right_arm_gripper.pos"
+    ],
+    "base": [
+      "x.vel",
+      "theta.vel"
+    ],
+    "aux": [
+      "lift"
+    ],
+    "cameras": [
+      "left_wrist",
+      "right_wrist",
+      "overhead",
+      "front"
+    ],
+    "ranges": {
+      "left_arm_shoulder_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_shoulder_roll.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_bicep_yaw.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_elbow_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_forearm_yaw.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_wrist_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_wrist_roll.pos": [
+        -100.0,
+        100.0
+      ],
+      "left_arm_gripper.pos": [
+        0.0,
+        100.0
+      ],
+      "right_arm_shoulder_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_shoulder_roll.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_bicep_yaw.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_elbow_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_forearm_yaw.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_wrist_pitch.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_wrist_roll.pos": [
+        -100.0,
+        100.0
+      ],
+      "right_arm_gripper.pos": [
+        0.0,
+        100.0
+      ]
+    },
+    "jog_scale": {
+      "joints": {
+        "left_arm_shoulder_pitch.pos": 11.4,
+        "left_arm_shoulder_roll.pos": 12.7,
+        "left_arm_bicep_yaw.pos": 13.1,
+        "left_arm_elbow_pitch.pos": 12.2,
+        "left_arm_forearm_yaw.pos": 14.0,
+        "left_arm_wrist_pitch.pos": 15.3,
+        "left_arm_wrist_roll.pos": 15.8,
+        "left_arm_gripper.pos": 22.0,
+        "right_arm_shoulder_pitch.pos": 11.4,
+        "right_arm_shoulder_roll.pos": 12.7,
+        "right_arm_bicep_yaw.pos": 13.1,
+        "right_arm_elbow_pitch.pos": 12.2,
+        "right_arm_forearm_yaw.pos": 14.0,
+        "right_arm_wrist_pitch.pos": 15.3,
+        "right_arm_wrist_roll.pos": 15.8,
+        "right_arm_gripper.pos": 22.0
+      },
+      "task": {
+        "x": 0.08,
+        "y": 0.08,
+        "pitch": 0.5,
+        "shoulder_pan": 0.5
+      },
+      "base": {
+        "linear": 0.15,
+        "angular": 0.6
+      },
+      "lift": 50.0
+    }
+  }
+}
