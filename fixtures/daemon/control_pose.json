@@ -1,12 +1,15 @@
 {
   "type": "control",
-  "seq": 812,
-  "action_id": "p-4f2a",
+  "seq": 41,
   "pose": {
     "right_arm": {
       "frame": "base_footprint",
-      "position_m": [0.42, -0.18, 0.95],
-      "orientation_xyzw": [0.0, 0.7071068, 0.0, 0.7071068]
+      "position_m": [
+        0.55,
+        -0.45,
+        0.98
+      ]
     }
-  }
+  },
+  "action_id": "pose-000041"
 }

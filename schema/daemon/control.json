@@ -42,9 +42,6 @@
     },
     "clutch": {
       "$ref": "#/$defs/clutch"
-    },
-    "pose_action": {
-      "$ref": "#/$defs/poseAction"
     }
   },
   "$defs": {
@@ -121,13 +118,39 @@
     "pose": {
       "type": "object",
       "additionalProperties": false,
-      "description": "PROPOSED (Cartesian pose targets, design rev 2 of 2026-08-20; capability \"pose_targets\" -- gate on it, no robot advertises it yet). Absolute per-arm gripper-TCP pose targets, solved to joint space ON THE ROBOT (one IK, shared by every client -- the wire never carries joint solutions) and then latched and tracked exactly like `action`: a zero jog does not cancel, the watchdog's t_stop drops the latch, e-stop blocks. Lifecycle rides the frame's `action_id` through action_status; terminal states are driven by OBSERVED joint motion, never by the solver returning. Failure is modelled, not exceptional: blocked with reason \"no_ik_solution\" (never retriable at this lift height), \"ik_timeout\" (retriable), \"limit:<joint>\", \"singularity\", \"collision\", \"lift_moved\" (the lift left the solve-time height; re-command re-solves), \"frame:<name>\" (unaccepted frame). The gripper and the lift are OUT: the gripper is a separate planning group with no solver (stays on `action`), and a pose out of reach at the current lift height is a refusal, never an implicit lift move. A dual-arm pose is TWO frames, one arm each -- a control frame carries one action_id, and arms fail independently.",
-      "properties": {
-        "left_arm": {
-          "$ref": "#/$defs/poseTarget"
-        },
-        "right_arm": {
-          "$ref": "#/$defs/poseTarget"
+      "description": "Cartesian pose target, solved on-robot via IK into the same latched-target path as `action` (reference implementation: nori_gateway 3b55c78). Keyed per arm; ONE arm per frame (one action_id, arms fail independently \u2014 send two frames for a dual-arm pose). Lifecycle via action_status: accepted (queued) -> active (solved, latched) -> done | blocked | timeout, terminal states from OBSERVED joint motion. Refusals are structured: empty_pose, one_arm_per_pose, frame:<got>, bad_pose, estop_latched, no_ik variants; an older live pose on the same arm is ended blocked:superseded. Feature-gated by ack capability `pose_targets`.",
+      "patternProperties": {
+        "^(left|right)_arm$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frame",
+            "position_m"
+          ],
+          "properties": {
+            "frame": {
+              "const": "base_footprint",
+              "description": "The only accepted frame (REP-103: +x fwd, +y left, +z up)."
+            },
+            "position_m": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "[x, y, z] meters in base_footprint."
+            },
+            "orientation_xyzw": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4,
+              "description": "TCP orientation quaternion, XYZW. Omitted = keep the CURRENT tcp orientation (position-only move; retriable with an explicit orientation if the solve fails)."
+            }
+          }
         }
       }
     },
@@ -186,56 +209,6 @@
         },
         "right": {
           "type": "boolean"
-        }
-      }
-    },
-    "poseAction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "side",
-        "position"
-      ],
-      "description": "PROPOSED (goto_pose, approved 2026-08-23). Cartesian pose target for one arm, resolved robot-side by MoveIt IK and executed through the same latched-target path as `action` \u2014 arrival reported via action_status (accepted -> done | blocked | clamped | timeout). blocked reason `no_ik` means the pose is unreachable: a structured refusal, never a hang. Frame is base_footprint, REP-103 (+x forward, +y left, +z up), meters. Requires action_id for the reply correlation; a robot that predates this verb ignores the field silently \u2014 clients MUST treat descriptor capability `pose_action` as the feature gate.",
-      "properties": {
-        "side": {
-          "enum": [
-            "left",
-            "right"
-          ]
-        },
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3,
-          "description": "[x, y, z] meters in base_footprint"
-        },
-        "orientation": {
-          "description": "Named preset or explicit WXYZ quaternion in base_footprint. Presets are robot-defined (descriptor advertises the list); omitted = robot's default for the arm.",
-          "oneOf": [
-            {
-              "enum": [
-                "top_down",
-                "forward"
-              ]
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 4,
-              "maxItems": 4
-            }
-          ]
-        },
-        "max_speed": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Optional joint-space speed cap (rad/s) for the execution leg."
         }
       }
     }
