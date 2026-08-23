@@ -6,10 +6,7 @@
   "norm_mode": "range_m100_100",
   "capabilities": [
     "task_jog",
-    "lift_targets",
-    "record",
-    "policy_stream",
-    "call"
+    "record"
   ],
   "watchdog_profile": {
     "t_warn_ms": 300,
@@ -139,6 +136,7 @@
       "task": {
         "x": 0.08,
         "y": 0.08,
+        "z": 0.08,
         "pitch": 0.5,
         "shoulder_pan": 0.5
       },

@@ -11,6 +11,10 @@
     "ok": { "type": "boolean" },
     "recording": { "type": "boolean", "description": "An episode is currently open." },
     "session_open": { "type": "boolean" },
+    "stereo": {
+      "type": "boolean",
+      "description": "L3: echoed on every reply while a session opened with stereo capture is open, and only then -- the UI reports stereo enforcement solely from this echo, so a robot predating the vocabulary stays silent rather than promising. Fixed at session open; a mid-session flag on the verb is ignored."
+    },
     "session": {
       "type": ["string", "null"],
       "description": "L2: the session directory name, e.g. \"20260729T201358Z-nori-l2-1002\". Absent on L3, which has no session directory."

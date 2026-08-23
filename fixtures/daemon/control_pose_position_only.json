@@ -1,0 +1,11 @@
+{
+  "type": "control",
+  "seq": 813,
+  "action_id": "p-4f2b",
+  "pose": {
+    "left_arm": {
+      "frame": "base_footprint",
+      "position_m": [0.38, 0.21, 0.7]
+    }
+  }
+}

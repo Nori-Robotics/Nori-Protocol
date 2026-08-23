@@ -9,6 +9,44 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-08-23 — PROPOSED: `control.pose` + capability `pose_targets` (additive)
+
+Absolute per-arm Cartesian pose targets, solved to joint space ON THE ROBOT — the wire
+never carries joint solutions, keeping the one-IK-per-fleet property the A3 jog path
+established. Design: rev 2 of 2026-08-20 (executor: solve-once via /compute_ik, then track
+through the commissioned JointJog path).
+
+- **`control.pose`** — `{left_arm|right_arm: {frame, position_m, orientation_xyzw?}}`.
+  Frame named in EVERY message (only `"base_footprint"` accepted today; unknown frames
+  answer `blocked` / `frame:<name>`); metres, REP-103, quaternion `[x,y,z,w]`, orientation
+  optional (position-only lets the solver pick the wrist). Latched like `action`; lifecycle
+  rides `action_id` through `action_status`; terminal states from OBSERVED motion, with a
+  modelled failure vocabulary (`no_ik_solution`, `ik_timeout`, `limit:<joint>`,
+  `singularity`, `collision`, `lift_moved`). Gripper and lift are out by design.
+- **`capabilities: "pose_targets"`** — gate on it; nothing advertises it yet.
+- Fixtures: `control_pose.json`, `control_pose_position_only.json`. New MODELS.md row.
+
+## 2026-08-23 — task-space `z`, the central `lift` jog key, `record_status.stereo` (additive, descriptive)
+
+Three catch-ups to what deployed code already speaks. The first was caught BY the A3
+gateway's conformance suite on the day it landed — the servo_temps failure mode, detected
+this time instead of three weeks later.
+
+- **`jog_scale.task.z` + armJog `"z"`** — the A3 gateway exposed vertical linear task jog
+  (REP-103 + = up, 2026-08-22, for policy/agent clients) and its ack immediately failed the
+  closed `task` schema. `z` joins x/y at m/s; L2 never had the verb and omits it.
+- **`control.jog.lift`** — the A3 gateway has honored a single CENTRAL `lift` rate all
+  along while the schema knew only the L2's paired `left_lift`/`right_lift`: the
+  two-namespaces failure shape, this time between models. Both spellings now exist;
+  `descriptor.aux` says which one a robot honors.
+- **`record_status.stereo`** — the L3 gateway echoes it on every reply while a
+  stereo-capture session is open (the app pins that contract); the schema rejected the
+  field. Pinned as a strict xfail in the gateway suite since 2026-08-20, now closed.
+  Fixture: `record_status_stereo.json`.
+- `fixtures/daemon/ack_a3_jog_scale.json` no longer advertises `lift_targets` /
+  `policy_stream` / `call` — the A3 gateway ignores those verbs, and a golden fixture that
+  over-claims capabilities teaches a client exactly the wrong lesson.
+
 ## 2026-08-20 — `alert` frames schema'd (additive, retroactive)
 
 The L3 gateway began emitting robot-owned operator alerts (`servo_thermal`, with the

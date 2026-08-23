@@ -30,7 +30,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional verbs this robot honours, beyond the always-present core (control jog, control action, command, telemetry). A client MUST treat an absent capability as unsupported, and MUST ignore an unrecognised entry rather than failing. This exists because capability differences are NOT expressible as DOFs: a descriptor cannot say whether absolute lift targets are accepted or whether two-way audio exists. Known values: \"task_jog\" (cylindrical/task-space arm jog), \"leader_action_deg\" (absolute leader-arm degrees), \"lift_targets\" (absolute <side>_lift.pos height targets in mm), \"record\" (dataset recording verbs), \"policy_stream\", \"call\" (two-way audio), \"perception\". Absent field means UNKNOWN, not none -- robots predating the field must be probed or assumed legacy. WHO FILLS THIS: it is a UNION built along the path. A daemon lists what it itself honours (task_jog, leader_action_deg, lift_targets); a bridge APPENDS what it adds on top (record, policy_stream, call) before forwarding, because the daemon cannot know whether a bridge in front of it does two-way audio. On a merged stack like the L3 gateway one process fills the whole list. A client therefore sees one flat list and must not infer which component provides a given capability."
+      "description": "Optional verbs this robot honours, beyond the always-present core (control jog, control action, command, telemetry). A client MUST treat an absent capability as unsupported, and MUST ignore an unrecognised entry rather than failing. This exists because capability differences are NOT expressible as DOFs: a descriptor cannot say whether absolute lift targets are accepted or whether two-way audio exists. Known values: \"task_jog\" (cylindrical/task-space arm jog), \"leader_action_deg\" (absolute leader-arm degrees), \"lift_targets\" (absolute <side>_lift.pos height targets in mm), \"record\" (dataset recording verbs), \"policy_stream\", \"call\" (two-way audio), \"perception\", \"pose_targets\" (PROPOSED -- absolute Cartesian pose targets via control.pose; no robot advertises it yet). Absent field means UNKNOWN, not none -- robots predating the field must be probed or assumed legacy. WHO FILLS THIS: it is a UNION built along the path. A daemon lists what it itself honours (task_jog, leader_action_deg, lift_targets); a bridge APPENDS what it adds on top (record, policy_stream, call) before forwarding, because the daemon cannot know whether a bridge in front of it does two-way audio. On a merged stack like the L3 gateway one process fills the whole list. A client therefore sees one flat list and must not infer which component provides a given capability."
     },
     "norm_mode": {
       "enum": [
@@ -124,7 +124,7 @@
             "task": {
               "type": "object",
               "additionalProperties": false,
-              "description": "Task-space jog verbs at full deflection. Present only on a robot advertising the `task_jog` capability. Note these keys are VERBS, not joints -- \"shoulder_pan\" here is a task-space rotation and is not a joint name on every model.",
+              "description": "Task-space jog verbs at full deflection. Present only on a robot advertising the `task_jog` capability. Note these keys are VERBS, not joints -- \"shoulder_pan\" here is a task-space rotation and is not a joint name on every model. `z` is vertical linear motion (REP-103: + = up), an A3-class verb the L2 keymap never had -- omitted by robots that do not drive it, like any other key here.",
               "properties": {
                 "x": {
                   "type": "number",
@@ -135,6 +135,11 @@
                   "type": "number",
                   "exclusiveMinimum": 0,
                   "description": "m/s"
+                },
+                "z": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "m/s -- vertical, + = up (REP-103)"
                 },
                 "pitch": {
                   "type": "number",

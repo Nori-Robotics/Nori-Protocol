@@ -52,6 +52,7 @@ current models and a client has no other way to discover them:
 | `policy_stream` | yes | **no** |
 | `call` — two-way audio | yes | **no** |
 | `perception` | schema only, unimplemented | **no** |
+| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **no** — PROPOSED, schema'd 2026-08-23; gate on the capability, no robot advertises it yet |
 
 Unknown entries MUST be ignored rather than treated as errors, so a newer robot
 can advertise capabilities this client has never heard of.
@@ -113,7 +114,7 @@ loop:
 |---|---|---|
 | `joints` | norm_mode units/s | `telemetry.state` and `descriptor.ranges` |
 | `lift` | mm/s | the mm of `<side>_lift.pos` absolute targets |
-| `task` | m/s (x, y), rad/s (pitch, shoulder_pan) | nothing — Cartesian verbs have no position key |
+| `task` | m/s (x, y, z), rad/s (pitch, shoulder_pan) | nothing — Cartesian verbs have no position key |
 | `base` | m/s, rad/s | keyed `linear`/`angular`, the JOG namespace |
 
 Joints are deliberately **not** in rad/s. Telemetry reports normalized positions, so a rate in

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/daemon/control.json",
   "title": "control",
-  "description": "Client -> daemon control frame (~50 Hz). May bundle any subset of jog/action/reset/clutch. seq is for ordering/dedup; send_ms is for latency display only -- neither feeds the safety watchdog.",
+  "description": "Client -> daemon control frame (~50 Hz). May bundle any subset of jog/action/pose/reset/clutch. seq is for ordering/dedup; send_ms is for latency display only -- neither feeds the safety watchdog.",
   "type": "object",
   "required": [
     "type"
@@ -31,6 +31,9 @@
     "action": {
       "$ref": "#/$defs/action"
     },
+    "pose": {
+      "$ref": "#/$defs/pose"
+    },
     "leader_action_deg": {
       "$ref": "#/$defs/leaderActionDeg"
     },
@@ -50,7 +53,7 @@
     "armJog": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Per-arm jog rates, keyed by DOF SHORT NAME. Two vocabularies share this object and a robot routes each key by name:\n\n  TASK-SPACE shorts -- \"x\", \"y\", \"pitch\", \"shoulder_pan\" -- request Cartesian motion. On L2 x/y drive IK(shoulder_lift, elbow_flex), pitch couples wrist_flex, and shoulder_pan orbits the whole arm about the shoulder. On L3 the same keys become a base-frame twist and shoulder_pan yaws the tool about base Z -- a deliberate behaviour change, same wire keys. Note \"shoulder_pan\" is a task-space VERB here, not a joint: it is not an L3 joint name at all.\n\n  JOINT shorts -- any other key -- drive one joint directly. The legal set is per-robot and MUST be derived from the ack descriptor: strip the \"<side>_arm_\" prefix and \".pos\" suffix from each descriptor.joints entry. L2 accepts its 5-DOF set (shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper); L3 accepts its 7-DOF set (shoulder_pitch, shoulder_roll, bicep_yaw, elbow_pitch, forearm_yaw, wrist_pitch, wrist_roll). A client MUST NOT compile in either list.\n\n\"gripper\" and \"wrist_roll\" are valid on both. Keys the robot does not recognise are ignored silently, so a typo reads as 'the SDK is broken' -- validate against the descriptor client-side.",
+      "description": "Per-arm jog rates, keyed by DOF SHORT NAME. Two vocabularies share this object and a robot routes each key by name:\n\n  TASK-SPACE shorts -- \"x\", \"y\", \"z\", \"pitch\", \"shoulder_pan\" -- request Cartesian motion. On L2 x/y drive IK(shoulder_lift, elbow_flex), pitch couples wrist_flex, and shoulder_pan orbits the whole arm about the shoulder; L2 has no \"z\". On L3/A3 the same keys become a base-frame twist, shoulder_pan yaws the tool about base Z -- a deliberate behaviour change, same wire keys -- and \"z\" is vertical linear motion (REP-103: + = up; added 2026-08-22 for policy/agent clients). Note \"shoulder_pan\" is a task-space VERB here, not a joint: it is not an L3 joint name at all.\n\n  JOINT shorts -- any other key -- drive one joint directly. The legal set is per-robot and MUST be derived from the ack descriptor: strip the \"<side>_arm_\" prefix and \".pos\" suffix from each descriptor.joints entry. L2 accepts its 5-DOF set (shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper); L3 accepts its 7-DOF set (shoulder_pitch, shoulder_roll, bicep_yaw, elbow_pitch, forearm_yaw, wrist_pitch, wrist_roll). A client MUST NOT compile in either list.\n\n\"gripper\" and \"wrist_roll\" are valid on both. Keys the robot does not recognise are ignored silently, so a typo reads as 'the SDK is broken' -- validate against the descriptor client-side.",
       "patternProperties": {
         "^[a-z][a-z0-9_]*$": {
           "$ref": "#/$defs/rate"
@@ -85,6 +88,10 @@
         },
         "right_lift": {
           "$ref": "#/$defs/rate"
+        },
+        "lift": {
+          "$ref": "#/$defs/rate",
+          "description": "Single CENTRAL lift rate -- A3-class hardware, which has one telescoping lift, not the L2's pair. Which spelling a robot honors is discoverable from descriptor.aux (A3 lists \"lift\"; a paired-lift robot lists left_lift/right_lift). Level-triggered like every jog: absence means the lift stops and holds position. Schema'd 2026-08-23; the A3 gateway had honored this key while the schema knew only the paired spelling -- the two-namespaces failure shape, caught by conformance."
         }
       }
     },
@@ -105,6 +112,52 @@
       "patternProperties": {
         "^[a-z0-9_]+(\\.pos)?$": {
           "type": "number"
+        }
+      }
+    },
+    "pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "PROPOSED (Cartesian pose targets, design rev 2 of 2026-08-20; capability \"pose_targets\" -- gate on it, no robot advertises it yet). Absolute per-arm gripper-TCP pose targets, solved to joint space ON THE ROBOT (one IK, shared by every client -- the wire never carries joint solutions) and then latched and tracked exactly like `action`: a zero jog does not cancel, the watchdog's t_stop drops the latch, e-stop blocks. Lifecycle rides the frame's `action_id` through action_status; terminal states are driven by OBSERVED joint motion, never by the solver returning. Failure is modelled, not exceptional: blocked with reason \"no_ik_solution\" (never retriable at this lift height), \"ik_timeout\" (retriable), \"limit:<joint>\", \"singularity\", \"collision\", \"lift_moved\" (the lift left the solve-time height; re-command re-solves), \"frame:<name>\" (unaccepted frame). The gripper and the lift are OUT: the gripper is a separate planning group with no solver (stays on `action`), and a pose out of reach at the current lift height is a refusal, never an implicit lift move. A dual-arm pose is TWO frames, one arm each -- a control frame carries one action_id, and arms fail independently.",
+      "properties": {
+        "left_arm": {
+          "$ref": "#/$defs/poseTarget"
+        },
+        "right_arm": {
+          "$ref": "#/$defs/poseTarget"
+        }
+      }
+    },
+    "poseTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frame",
+        "position_m"
+      ],
+      "description": "One arm's absolute pose target. Conventions are NORMATIVE and match the rest of the task-space vocabulary: metres, REP-103 handedness (+x forward, +y left, +z up), no client-side negation ever -- a robot whose hardware disagrees compensates internally. The frame is named in every message so a recorded pose can never silently mean something different on replay.",
+      "properties": {
+        "frame": {
+          "type": "string",
+          "description": "Frame the pose is expressed in. Robots today accept only \"base_footprint\" -- fixed to the robot, stable across lift travel, the commissioned twist convention -- and answer any other name with action_status blocked, reason \"frame:<name>\". Deliberately an open string, not an enum: naming the frame is what makes ambiguity impossible, and a future robot accepting more frames is additive."
+        },
+        "position_m": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          },
+          "description": "[x, y, z] of the gripper TCP in `frame`, metres."
+        },
+        "orientation_xyzw": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          },
+          "description": "Optional TCP orientation as a quaternion in ROS [x, y, z, w] order. OMIT for position-only targets -- the solver picks the wrist, and a great many real tasks are \"get the gripper to this point, any wrist angle\"; forcing a full pose turns those into avoidable IK failures. Quaternion, not Euler: this protocol has already paid for one axis-convention lesson."
         }
       }
     },
