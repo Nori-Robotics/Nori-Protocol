@@ -1,0 +1,9 @@
+{
+  "type": "alert",
+  "code": "servo_thermal",
+  "severity": "info",
+  "active": false,
+  "latched": false,
+  "message": "Servo temperatures returned to normal",
+  "ts_ns": 1755742200000000000
+}

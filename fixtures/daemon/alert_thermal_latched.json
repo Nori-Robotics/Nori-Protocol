@@ -1,0 +1,11 @@
+{
+  "type": "alert",
+  "code": "servo_thermal",
+  "severity": "critical",
+  "active": true,
+  "latched": true,
+  "message": "left elbow at 61 C -- motion off until cool-down",
+  "ts_ns": 1755741600000000000,
+  "hottest_c": 61,
+  "joint": "left_elbow_pitch_joint"
+}

@@ -9,6 +9,35 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-08-20 — `alert` frames schema'd (additive, retroactive)
+
+The L3 gateway began emitting robot-owned operator alerts (`servo_thermal`, with the
+thermal-supervisor stack) before any schema existed — a whole new message TYPE with no
+contract, one level up from the `servo_temps` field drift of 2026-08-12, and caught the
+same way: the gateway's conformance suite (`nori_ws` `test_conformance.py`) pinned the gap
+as a strict xfail on the day of the merge.
+
+- **`schema/daemon/alert.json`** — schema'd descriptively from the gateway's emitter.
+  `alert` is idempotent STATE keyed by `code` (`active: false` clears it), not a toast:
+  the control channel is unreliable and unordered, so clients must dedupe/replace by
+  `code`, never count frames. `severity` is the only rendering input; condition-specific
+  context rides optional fields (`hottest_c`, `joint`, `latched`), so a new alert kind is
+  a new `code` value, not a new message type. Unknown codes MUST render generically, not
+  error. Lives under `daemon/` because a daemon can legitimately originate one (thermal),
+  even though the L3 gateway is today's only emitter.
+- New fixtures: `alert_thermal_latched.json`, `alert_cleared.json`.
+
+## 2026-08-20 — `descriptor.jog_scale` (additive)
+
+Recorded retroactively (the commit landed without an entry — the "when did this field
+appear" failure this file exists to prevent, in the file itself). `ack.descriptor` gains
+an optional `jog_scale` block advertising the nominal commanded scale of a full-deflection
+jog per namespace (joints / task / base / lift), so a script can convert a desired real
+rate into a normalized one and verify against telemetry. Omission at every level means
+UNKNOWN, never zero; the L2 fleet is frozen and will never send it. See MODELS.md
+"Knowing how fast 1.0 is". New fixtures: `ack_a3_jog_scale.json`,
+`ack_jog_scale_partial.json`.
+
 ## 2026-08-13 — command hardening and secret hygiene (constraints + docs only)
 
 No new message types and no field renames. A pre-commit security pass over the day's work.

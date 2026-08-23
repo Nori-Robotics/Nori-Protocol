@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/daemon/alert.json",
+  "title": "alert",
+  "description": "Robot -> client operator alert. STATE, not a one-shot toast: a later frame with the same `code` replaces the earlier one, and `active: false` clears it. Additive to v1 -- older clients ignore the unknown type. Schema'd 2026-08-20, descriptively, from the L3 gateway's emitter (the thermal-supervisor stack shipped the frame first; this repo caught up). The frame is generic on purpose: `code` is the machine key a client dedupes and clears on, `severity` is the only rendering input, and everything condition-specific rides optional context fields, so a new alert kind is a new `code` value, not a new message type.",
+  "type": "object",
+  "required": [
+    "type",
+    "code",
+    "severity",
+    "active",
+    "message"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "alert"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable machine key for the condition, e.g. \"servo_thermal\". Client behaviour keys on this, never on `message`. A client MUST ignore a code it does not recognise (render `message` at `severity`, nothing more), so a new robot can alert about conditions this client has never heard of."
+    },
+    "severity": {
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "description": "Rendering severity. The clear frame for a condition typically arrives as `info` with `active: false`."
+    },
+    "active": {
+      "type": "boolean",
+      "description": "true while the condition holds; false clears the same `code`. Because the control channel is unreliable AND unordered, a robot SHOULD re-emit the current alert state on change and MAY rebroadcast it; clients must treat frames as idempotent state, not events to count."
+    },
+    "latched": {
+      "type": "boolean",
+      "description": "Motion is inhibited by this condition and will not resume on the condition clearing alone (e.g. thermal lockout: the operator reconnects after cool-down). Absent means false."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable detail, rendered verbatim. Never parse it: anything a client needs to branch on belongs in `code` or a context field."
+    },
+    "ts_ns": {
+      "type": "integer",
+      "description": "Robot monotonic/epoch ns, same clock as telemetry.ts_ns."
+    },
+    "hottest_c": {
+      "type": "integer",
+      "description": "Thermal context: hottest servo case temperature in WHOLE degrees C -- same rounding contract as telemetry.servo_temps, for the same reason (the register is an integer)."
+    },
+    "joint": {
+      "type": "string",
+      "description": "Thermal context: the joint the reading belongs to, in the robot's telemetry naming."
+    }
+  }
+}

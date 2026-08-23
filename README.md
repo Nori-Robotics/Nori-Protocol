@@ -55,6 +55,7 @@ is required rather than optional.
 | D→C | `ack` | `schema/daemon/ack.json` |
 | D→C | `telemetry` | `schema/daemon/telemetry.json` |
 | D→C | `error` | `schema/daemon/error.json` |
+| D→C | `alert` | `schema/daemon/alert.json` — idempotent operator-alert state keyed by `code`; L3 gateway emits it today, a daemon may |
 
 ### Proposed (additive, no version bump — not yet emitted by the daemon)
 | Direction | type | schema | notes |
