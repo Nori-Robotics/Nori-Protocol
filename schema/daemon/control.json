@@ -42,6 +42,9 @@
     },
     "clutch": {
       "$ref": "#/$defs/clutch"
+    },
+    "pose_action": {
+      "$ref": "#/$defs/poseAction"
     }
   },
   "$defs": {
@@ -183,6 +186,56 @@
         },
         "right": {
           "type": "boolean"
+        }
+      }
+    },
+    "poseAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "position"
+      ],
+      "description": "PROPOSED (goto_pose, approved 2026-08-23). Cartesian pose target for one arm, resolved robot-side by MoveIt IK and executed through the same latched-target path as `action` \u2014 arrival reported via action_status (accepted -> done | blocked | clamped | timeout). blocked reason `no_ik` means the pose is unreachable: a structured refusal, never a hang. Frame is base_footprint, REP-103 (+x forward, +y left, +z up), meters. Requires action_id for the reply correlation; a robot that predates this verb ignores the field silently \u2014 clients MUST treat descriptor capability `pose_action` as the feature gate.",
+      "properties": {
+        "side": {
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "[x, y, z] meters in base_footprint"
+        },
+        "orientation": {
+          "description": "Named preset or explicit WXYZ quaternion in base_footprint. Presets are robot-defined (descriptor advertises the list); omitted = robot's default for the arm.",
+          "oneOf": [
+            {
+              "enum": [
+                "top_down",
+                "forward"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          ]
+        },
+        "max_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Optional joint-space speed cap (rad/s) for the execution leg."
         }
       }
     }

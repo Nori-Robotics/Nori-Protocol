@@ -1,0 +1,14 @@
+{
+  "type": "control",
+  "seq": 41,
+  "pose_action": {
+    "side": "right",
+    "position": [
+      0.55,
+      -0.45,
+      0.98
+    ],
+    "orientation": "top_down"
+  },
+  "action_id": "pa-000041"
+}
