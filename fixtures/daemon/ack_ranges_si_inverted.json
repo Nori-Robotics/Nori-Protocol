@@ -1,0 +1,24 @@
+{
+  "type": "ack",
+  "accepted": true,
+  "protocol_version": 1,
+  "model": "A3",
+  "norm_mode": "range_m100_100",
+  "descriptor": {
+    "joints": [
+      "left_arm_wrist_roll.pos"
+    ],
+    "ranges": {
+      "left_arm_wrist_roll.pos": [
+        -100.0,
+        100.0
+      ]
+    },
+    "ranges_si": {
+      "left_arm_wrist_roll.pos": [
+        2.79,
+        -2.81
+      ]
+    }
+  }
+}

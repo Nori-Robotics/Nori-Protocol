@@ -145,6 +145,72 @@
         "angular": 0.6
       },
       "lift": 50.0
+    },
+    "ranges_si": {
+      "left_arm_shoulder_pitch.pos": [
+        -1.92,
+        1.88
+      ],
+      "left_arm_shoulder_roll.pos": [
+        -1.55,
+        1.61
+      ],
+      "left_arm_bicep_yaw.pos": [
+        -2.62,
+        2.58
+      ],
+      "left_arm_elbow_pitch.pos": [
+        -2.31,
+        0.06
+      ],
+      "left_arm_forearm_yaw.pos": [
+        -2.6,
+        2.63
+      ],
+      "left_arm_wrist_pitch.pos": [
+        -1.74,
+        1.69
+      ],
+      "left_arm_wrist_roll.pos": [
+        -2.79,
+        2.81
+      ],
+      "left_arm_gripper.pos": [
+        0.0,
+        0.043
+      ],
+      "right_arm_shoulder_pitch.pos": [
+        -1.91,
+        1.89
+      ],
+      "right_arm_shoulder_roll.pos": [
+        -1.54,
+        1.62
+      ],
+      "right_arm_bicep_yaw.pos": [
+        -2.61,
+        2.59
+      ],
+      "right_arm_elbow_pitch.pos": [
+        -2.3,
+        0.07
+      ],
+      "right_arm_forearm_yaw.pos": [
+        -2.59,
+        2.64
+      ],
+      "right_arm_wrist_pitch.pos": [
+        -1.73,
+        1.7
+      ],
+      "right_arm_wrist_roll.pos": [
+        -2.78,
+        2.82
+      ],
+      "right_arm_gripper.pos": [
+        0.01,
+        0.053
+      ]
     }
   }
 }

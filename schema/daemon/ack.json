@@ -176,6 +176,18 @@
               "description": "Lift travel at full deflection, mm/s. One value: a robot with paired lifts drives both at the same rate, and A3 has a single central lift."
             }
           }
+        },
+        "ranges_si": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "description": "The same [min, max] bounds as `ranges`, in SI units: RADIANS for a revolute joint, METRES for a prismatic one. Optional; absent means the robot does not publish it and a client MUST NOT substitute a guess. The L-series fleet is frozen and will never send it.\n\nWHY THIS EXISTS. `ranges` is in norm_mode units, and the normalized-to-physical mapping is the robot's own PER-UNIT CALIBRATION -- not a nominal figure from the URDF. Without these bounds a client that wants real angles (to pose a URDF, run its own FK, or feed a simulator) has to substitute the URDF's nominal joint limits, which are wrong by whatever that unit's calibration offset happens to be, and wrong SILENTLY. Publishing the calibrated bounds is what makes the conversion exact.\n\nCONVERTING. Map linearly between the two entries for the SAME key -- do NOT special-case the gripper. `ranges` already encodes the convention difference (a body joint is [-100, 100], a gripper is [0, 100]), so:\n    frac = (value - ranges[k][0]) / (ranges[k][1] - ranges[k][0])\n    si   = ranges_si[k][0] + frac * (ranges_si[k][1] - ranges_si[k][0])\nThis is the same arithmetic the daemon runs in the other direction, so a round trip is lossless up to float precision.\n\nWHICH KEYS APPEAR. Only keys whose `ranges` entry is NORMALIZED. A key already published in physical units needs no entry and MUST NOT have one -- the A-series lift is the case in point: `ranges[\"lift.pos\"]` is already millimetres, so converting it would be converting twice. A key present in `ranges_si` but not in `ranges` is invalid: there is nothing to map it from.\n\nBounds may be inverted (lower > upper) where the calibration reverses the axis. Do not sort them -- the order carries the direction, and normalizing it away flips the joint."
         }
       }
     },
