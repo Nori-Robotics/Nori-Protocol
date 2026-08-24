@@ -130,6 +130,40 @@ expressed by leaving it out.
 **The L2 fleet is frozen and will never send this**, so absent is the common case and will
 stay that way. Any client using `jog_scale` needs a path for robots that do not publish it.
 
+## Real angles from a normalized wire — `descriptor.ranges_si`
+
+`ranges` is in `norm_mode` units, and the mapping from those to physical units is the robot's
+own **per-unit calibration** — not a nominal figure from the URDF. So a client that wants real
+angles (to pose a URDF, run its own FK, feed a simulator) has no exact way to get them: it can
+substitute the URDF's nominal joint limits, which are wrong by whatever that unit's calibration
+offset happens to be, and wrong **silently**.
+
+`ranges_si` publishes the calibrated bounds — radians for a revolute joint, metres for a
+prismatic one — so the conversion becomes exact.
+
+**Convert by mapping linearly between the two entries for the same key.** Do not special-case
+the gripper: `ranges` already carries the convention difference (a body joint is `[-100, 100]`,
+a gripper is `[0, 100]`), so one formula covers both.
+
+```
+frac = (value - ranges[k][0]) / (ranges[k][1] - ranges[k][0])
+si   = ranges_si[k][0] + frac * (ranges_si[k][1] - ranges_si[k][0])
+```
+
+That is the same arithmetic the daemon runs in the other direction, so a round trip is lossless
+up to float precision.
+
+**Only keys whose `ranges` entry is normalized appear.** A key already published in physical
+units must NOT have an entry — the A-series lift is the case in point: `ranges["lift.pos"]` is
+already millimetres, so an SI entry would mean converting twice.
+
+**Bounds may be inverted** (`lower > upper`) where the calibration reverses that axis. Do not
+sort them: the order carries the direction, and normalizing it away flips the joint.
+
+Absent means UNKNOWN, per key and for the whole map. The L-series fleet is frozen and will
+never publish it, so a client that needs real angles must handle absence — the honest fallback
+is to say "unknown", not to substitute nominal limits.
+
 ## Cameras are not in the descriptor path
 
 `descriptor.cameras` is diagnostic metadata. It does **not** drive video.
