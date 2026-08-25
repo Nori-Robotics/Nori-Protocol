@@ -52,7 +52,7 @@ current models and a client has no other way to discover them:
 | `policy_stream` | yes | **no** |
 | `call` — two-way audio | yes | **no** |
 | `perception` | schema only, unimplemented | **no** |
-| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **no** — PROPOSED, schema'd 2026-08-23; gate on the capability, no robot advertises it yet |
+| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized 2026-08-25; the nori_ws gateway advertises and serves it whenever its motion stack is up (bench-verified on A3 through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
 
 Unknown entries MUST be ignored rather than treated as errors, so a newer robot
 can advertise capabilities this client has never heard of.
@@ -80,13 +80,15 @@ A robot whose hardware turns the other way compensates in its own actuator
 adapter, internally. Never on the wire, and never in a shared client library —
 a per-model quirk fixed in shared code becomes every other model's bug.
 
-> **Status: both current implementations deviate and must be reconciled.** The
-> L2-era app negated `angular` on the wire and the L3 gateway un-negates it to
-> compensate; a later app change began negating `linear` as well, which the
-> gateway does not undo. Adopting this convention means the app stops negating
-> and the L3 gateway stops un-negating, in one coordinated change. Until then,
-> `fixtures/daemon/control_jog_base.json` is the target, not a description of what
-> either side currently emits.
+> **Status: reconciled (2026-08-25).** `fixtures/daemon/control_jog_base.json`
+> now describes what every client emits and what the gateway consumes: no
+> negation on either side. The one surviving exception is the DEPLOYED L2
+> fleet, whose frozen firmware turns opposite on `angular` — that flip lives
+> client-side in the TS SDK's `RemoteTeleop.wireJog`, behind a positive L2
+> model match (never a fallback), because the L2 daemon cannot host the
+> actuator-adapter compensation this section prescribes. Rollout coupling:
+> a client from before this change negates `angular` against a gateway from
+> after it (and vice versa) — update gateway and clients together.
 
 ## Knowing how fast "1.0" is — `descriptor.jog_scale`
 

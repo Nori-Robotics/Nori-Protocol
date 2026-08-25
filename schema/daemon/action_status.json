@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/daemon/action_status.json",
   "title": "action_status",
-  "description": "PROPOSED (Phase E / G1). Daemon -> client lifecycle for a motion-bearing control frame that carried an `action_id`. Transitions: accepted -> active -> done | blocked | clamped | timeout. Additive (no protocol_version bump): older clients ignore an unknown type. See docs/phase_e_action_completion.md.",
+  "description": "Daemon -> client lifecycle for a motion-bearing control frame that carried an `action_id`. Transitions: accepted -> active -> done | blocked | clamped | timeout. Additive (no protocol_version bump): older clients ignore an unknown type. Finalized 2026-08-25 (was PROPOSED, Phase E / G1). See docs/phase_e_action_completion.md.",
   "type": "object",
   "required": [
     "type",

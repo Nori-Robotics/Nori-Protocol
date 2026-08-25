@@ -9,6 +9,22 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-08-25 — FINALIZED: `control.pose`, `action_id`, `action_status`; base signs reconciled (additive)
+
+- **`control.pose` + capability `pose_targets` graduate from PROPOSED.** The nori_ws
+  gateway advertises and serves them whenever its motion stack is up, bench-verified on A3
+  through the full lifecycle including the observed-motion failure guards. `action_id` and
+  `action_status` — the correlator and lifecycle the pose path rides — graduate with it.
+  Both SDKs (`@nori/sdk` and `nori-sdk-py`, each 1.0.0) ship these as v1 API.
+  `perception` remains PROPOSED (schema only, unimplemented).
+- **Base sign convention reconciled** (see MODELS.md "The two base namespaces"): clients
+  now emit the v1 fixture (`control_jog_base.json`) verbatim — raw REP-103, no client
+  negation — and the gateway stopped un-negating `angular`. The L2-era negation survives
+  only inside the TS SDK's positive L2 model gate. **No `VERSION` bump**: this is the
+  implementations converging on what v1 always specified, not a wire change. Rollout: the
+  gateway and clients must deploy together across this boundary on A3/L3 units — a
+  new-client/old-gateway (or old/new) pairing inverts `angular`.
+
 ## 2026-08-23 — PROPOSED: `control.pose` + capability `pose_targets` (additive)
 
 Absolute per-arm Cartesian pose targets, solved to joint space ON THE ROBOT — the wire
