@@ -2,12 +2,10 @@
 
 The **single source of truth** for the JSON wire contract Nori robots and clients speak. Consumed as a **git submodule** so no repo owns a private copy.
 
-It covers two layers (see [Why two layers](#why-two-layers)): the **daemon** contract, spoken by the C++ on-board daemon (`NoriCoreAgent`, in `NoriTeleop/rpi5/`), and the **session** contract, spoken over the WebRTC data channel by the operator clients (`NoriLeLab`, `nori-sdk-py`) and by the L3 ROS 2 gateway (`nori_ws`).
+It covers two layers (see [Why two layers](#why-two-layers)): the **daemon** contract, spoken by the robot's on-board motion daemon over its internal control port, and the **session** contract, spoken over the WebRTC data channel by the operator clients — the TypeScript `@nori/sdk`, the Python `nori-sdk` on PyPI — and by the robot's ROS 2 gateway.
 
 - **Writing your own client:** `CLIENTS.md` — the transport, the handshake, and a minimal example.
 - **Supporting more than one robot model:** `MODELS.md` — capability discovery, the descriptor-vs-`model` rule, the two base namespaces, and the per-model fixtures. Read this before branching on anything.
-- Human spec / rationale: `NoriTeleop/docs/nori_protocol_schema.md`.
-- Architecture context: `onboard_pi_plan.md` §f / R8.
 
 ## Layout
 ```
@@ -57,15 +55,14 @@ is required rather than optional.
 | D→C | `error` | `schema/daemon/error.json` |
 | D→C | `alert` | `schema/daemon/alert.json` — idempotent operator-alert state keyed by `code`; L3 gateway emits it today, a daemon may |
 
-### Proposed (additive, no version bump — not yet emitted by the daemon)
+### Proposed (additive, no version bump — not yet emitted by any robot)
 | Direction | type | schema | notes |
 |---|---|---|---|
-| C→D | `control.action_id` (optional field) | `schema/daemon/control.json` | correlates a motion frame to its `action_status` |
-| D→C | `action_status` | `schema/daemon/action_status.json` | Phase E / G1 — action-completion lifecycle (`accepted→active→done\|blocked\|clamped\|timeout`) |
-| D→C | `perception` | `schema/daemon/perception.json` | Phase F / G3 — structured world-state (`objects[{label,confidence,bbox?,xyz?,id?}]`) from an on-Pi detector |
+| D→C | `perception` | `schema/daemon/perception.json` | structured world-state (`objects[{label,confidence,bbox?,xyz?,id?}]`) from an on-robot detector |
 
-These validate under `validate.py` today (fixtures included) but are **PROPOSED**: the app/SDK side
-is built, the daemon side is pending (see `docs/daemon_followups.md` in the NoriTeleop repo).
+It validates under `validate.py` today (fixtures included) but is **PROPOSED**: the client side
+is built, the robot side is pending. `control.action_id`, `action_status` and `control.pose`
+graduated to finalized on 2026-08-25 — see the CHANGELOG.
 
 ### Session layer (client ⇄ bridge/gateway, over the WebRTC data channel)
 Schema'd 2026-08-13. Every one of these was already in production on both stacks and specified
@@ -97,9 +94,8 @@ python validate.py        # exits non-zero on any schema/fixture mismatch
 ```
 **Intended** consumers: `NoriTeleop`, `NoriLeLab`, `nori_ws` (the L3 ROS 2 gateway) and `nori-sdk-py`, each running this plus their own golden-fixture decode tests against `fixtures/`.
 
-> **Actual status (2026-08-12): only `NoriTeleop` consumes this repo.** `NoriLeLab` has no
-> `.gitmodules` entry, `nori_ws` has no reference to it, and neither runs `validate.py`. Every
-> wire divergence found in the 2026-08 audits — the base DOF namespace, the action lifecycle,
-> `policy_stream_status` field names, the L3 joint vocabulary being schema-invalid — is
-> downstream of that. Re-attaching the two drifted consumers is worth more than any single
-> schema fix here.
+> **Status (2026-08-26): all four stacks consume this repo.** Both SDKs run fixture-driven
+> conformance suites against it in CI (the Python SDK pins its base-jog emission
+> byte-for-byte against `fixtures/daemon/control_jog_base.json`), and the robot's gateway
+> ships its own conformance tests. The 2026-08 audits found every wire divergence traced to
+> consumers that had drifted from this spec — reattaching them fixed the lot.

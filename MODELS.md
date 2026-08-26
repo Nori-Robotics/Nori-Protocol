@@ -211,9 +211,9 @@ The fixtures here are the target. These are the known deltas:
   absent.
 - **Neither stack emits `model` or `capabilities`** — both fields are new here.
 - **Base sign convention** — see above.
-- **The app and the L3 gateway consume no schema at all.** `validate.py` is
-  wired into neither. `nori-protocol` is currently a submodule of `NoriTeleop`
-  only, which is how all of the above drifted.
+- **(Historical, resolved 2026-08-26.)** The app and the gateway once consumed no schema
+  at all, which is how the deviations above drifted; every stack now runs conformance
+  against this repo.
 
 ## Versioning
 
