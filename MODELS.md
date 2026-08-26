@@ -11,10 +11,9 @@ model ships. A client that reads the descriptor works against hardware that did
 not exist when it was written. `model` is in the `ack` so that logs, dataset
 provenance and bug reports can *name* the hardware — it is not a control input.
 
-This is the same conclusion the backend reached in migration 034 (`robots.model`
-exists precisely so callers stop re-parsing the serial) and the same one
-`nori_protocol_schema.md` states for the descriptor: *"the `descriptor` lets the
-app adapt instead of hardcoding DOF."*
+The fleet backend reached the same conclusion independently (its `robots.model`
+column exists precisely so callers stop re-parsing the serial): the descriptor
+lets a client adapt instead of hardcoding DOF.
 
 ## Discovery, in order
 
@@ -52,7 +51,7 @@ current models and a client has no other way to discover them:
 | `policy_stream` | yes | **no** |
 | `call` — two-way audio | yes | **no** |
 | `perception` | schema only, unimplemented | **no** |
-| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized 2026-08-25; the nori_ws gateway advertises and serves it whenever its motion stack is up (bench-verified on A3 through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
+| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized 2026-08-25; the robot's gateway advertises and serves it whenever its motion stack is up (hardware-verified through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
 
 Unknown entries MUST be ignored rather than treated as errors, so a newer robot
 can advertise capabilities this client has never heard of.

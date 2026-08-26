@@ -28,8 +28,8 @@ turned out to be the question that costs the most to answer after the fact.
 
 ## 2026-08-25 — FINALIZED: `control.pose`, `action_id`, `action_status`; base signs reconciled (additive)
 
-- **`control.pose` + capability `pose_targets` graduate from PROPOSED.** The nori_ws
-  gateway advertises and serves them whenever its motion stack is up, bench-verified on A3
+- **`control.pose` + capability `pose_targets` graduate from PROPOSED.** The robot's
+  gateway advertises and serves them whenever its motion stack is up, hardware-verified
   through the full lifecycle including the observed-motion failure guards. `action_id` and
   `action_status` — the correlator and lifecycle the pose path rides — graduate with it.
   Both SDKs (`@nori/sdk` and `nori-sdk-py`, each 1.0.0) ship these as v1 API.
@@ -85,7 +85,7 @@ this time instead of three weeks later.
 The L3 gateway began emitting robot-owned operator alerts (`servo_thermal`, with the
 thermal-supervisor stack) before any schema existed — a whole new message TYPE with no
 contract, one level up from the `servo_temps` field drift of 2026-08-12, and caught the
-same way: the gateway's conformance suite (`nori_ws` `test_conformance.py`) pinned the gap
+same way: the gateway's conformance suite pinned the gap
 as a strict xfail on the day of the merge.
 
 - **`schema/daemon/alert.json`** — schema'd descriptively from the gateway's emitter.

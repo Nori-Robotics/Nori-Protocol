@@ -92,7 +92,7 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 ```bash
 python validate.py        # exits non-zero on any schema/fixture mismatch
 ```
-**Intended** consumers: `NoriTeleop`, `NoriLeLab`, `nori_ws` (the L3 ROS 2 gateway) and `nori-sdk-py`, each running this plus their own golden-fixture decode tests against `fixtures/`.
+Consumers: the robot's on-board daemon, the browser app, the robot's ROS 2 gateway, and both operator SDKs (`@nori/sdk`, `nori-sdk`) — each running `validate.py` plus their own golden-fixture decode tests against `fixtures/`.
 
 > **Status (2026-08-26): all four stacks consume this repo.** Both SDKs run fixture-driven
 > conformance suites against it in CI (the Python SDK pins its base-jog emission

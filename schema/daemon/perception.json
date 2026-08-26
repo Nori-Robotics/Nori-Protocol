@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/daemon/perception.json",
   "title": "perception",
-  "description": "PROPOSED (Phase F / G3). Robot -> client structured world-state, emitted at a LOW rate (~2-10 Hz, decoupled from the 50 Hz control loop) by an on-Pi detector running as a separate MEDIA-SIDE sidecar (never in the servo loop, never a :7777 control client) \u2014 the media bridge merges it onto the operator data channel alongside daemon telemetry. Gives a running script eyes to close a loop on (robot.perceive()), distinct from the human-facing video track and the laptop-side one-shot LLM vision. Additive (no protocol_version bump): older clients ignore an unknown type. See docs/phase_f_perception.md and daemon_followups.md \u00a73.",
+  "description": "PROPOSED. Robot -> client structured world-state, emitted at a LOW rate (~2-10 Hz, decoupled from the 50 Hz control loop) by an on-Pi detector running as a separate MEDIA-SIDE sidecar (never in the servo loop, never a :7777 control client) \u2014 the media bridge merges it onto the operator data channel alongside daemon telemetry. Gives a running script eyes to close a loop on (robot.perceive()), distinct from the human-facing video track and the laptop-side one-shot LLM vision. Additive (no protocol_version bump): older clients ignore an unknown type.",
   "type": "object",
   "required": [
     "type",
