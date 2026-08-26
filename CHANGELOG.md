@@ -9,6 +9,23 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-08-26 — `yaw` task-jog short; `shoulder_pan` deprecated as its alias (additive)
+
+- **`yaw` is the canonical task-space short** for the angular-z of the base-frame twist
+  on twist-class robots (L3/A3): accepted in `control.arm_jog` task shorts and advertised
+  in `jog_scale.task`. **`shoulder_pan` remains as a DEPRECATED ALIAS** with identical
+  twist-class semantics — existing clients keep working unchanged. If both are held,
+  `yaw` wins deterministically (never summed). **L2 semantics unchanged**: L2 keeps its
+  historical `shoulder_pan` orbit and ignores `yaw` as an unknown key. `roll` (twist
+  ang_x) is documented as RESERVED — not accepted, ang_x stays 0.0. No `VERSION` bump.
+- **`descriptor.ranges_si` is now actually published by the A3/L3 gateway.** The field
+  was already specified (ack.json, fixtures, MODELS.md "Real angles from a normalized
+  wire") but no implementation emitted it, so clients were denormalizing telemetry via
+  URDF nominal limits — wrong by each unit's calibration offset, silently (observed live
+  on A3, 2026-08-26). The gateway now publishes the calibrated [lower, upper] radian
+  bounds for every normalized joint/gripper key; `lift.pos` is excluded per the spec
+  (already physical mm). Additive — L2 still never sends it. No `VERSION` bump.
+
 ## 2026-08-25 — FINALIZED: `control.pose`, `action_id`, `action_status`; base signs reconciled (additive)
 
 - **`control.pose` + capability `pose_targets` graduate from PROPOSED.** The nori_ws

@@ -45,7 +45,7 @@ current models and a client has no other way to discover them:
 
 | Capability | L2 | L3 |
 |---|---|---|
-| `task_jog` — cylindrical/task-space arm jog | yes | yes (base-frame twist; `shoulder_pan` yaws about base Z) |
+| `task_jog` — cylindrical/task-space arm jog | yes | yes (base-frame twist; `yaw` (canonical) / `shoulder_pan` (deprecated alias) yaws about base Z) |
 | `record` — dataset recording verbs | yes | yes (same 11 verbs; `discard` differs in MEANING — see session/record.json) |
 | `leader_action_deg` — absolute leader degrees | yes | **no** — dropped as unmappable |
 | `lift_targets` — absolute `<side>_lift.pos` in mm | yes | **no** — silently ignored |
@@ -116,7 +116,7 @@ loop:
 |---|---|---|
 | `joints` | norm_mode units/s | `telemetry.state` and `descriptor.ranges` |
 | `lift` | mm/s | the mm of `<side>_lift.pos` absolute targets |
-| `task` | m/s (x, y, z), rad/s (pitch, shoulder_pan) | nothing — Cartesian verbs have no position key |
+| `task` | m/s (x, y, z), rad/s (pitch, yaw — canonical; shoulder_pan is a deprecated alias of yaw) | nothing — Cartesian verbs have no position key |
 | `base` | m/s, rad/s | keyed `linear`/`angular`, the JOG namespace |
 
 Joints are deliberately **not** in rad/s. Telemetry reports normalized positions, so a rate in
