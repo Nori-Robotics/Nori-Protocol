@@ -65,6 +65,28 @@
     "loop_hz": {
       "type": "number"
     },
+    "link_stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Robot-side control-channel receive accounting for the window since the previous telemetry frame (added 2026-08-27; A3 gateway). Separates wire loss from robot-side stalls so a watchdog safe_hold can be attributed. rx_gap_max_ms = largest gap between consecutive inbound control-channel messages in the window. seq_seen/seq_missed appear once the client stamps an integer `seq` on its outbound frames: missed counts holes in the sequence, i.e. frames the wire lost. A large rx_gap with seq_missed 0 means the client sent nothing (operator idle) or the robot itself stalled -- NOT network loss. Named link_stats, not link: status.link (lan/wan) and the inbound `link` frame already use that word.",
+      "required": [
+        "rx_gap_max_ms"
+      ],
+      "properties": {
+        "rx_gap_max_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seq_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "seq_missed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "errors": {
       "type": "integer",
       "minimum": 0
