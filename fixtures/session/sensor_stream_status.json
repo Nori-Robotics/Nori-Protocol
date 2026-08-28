@@ -1,0 +1,10 @@
+{
+  "type": "sensor_stream_status",
+  "request_id": "f4283fa1-5a3b-4295-99d5-3f6baf87b04d",
+  "ok": true,
+  "lidar_hz": 5,
+  "imu_hz": 20,
+  "lidar_max_points": 360,
+  "lidar_available": true,
+  "imu_available": true
+}

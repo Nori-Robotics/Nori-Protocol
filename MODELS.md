@@ -52,6 +52,8 @@ current models and a client has no other way to discover them:
 | `call` — two-way audio | yes | **no** |
 | `perception` | schema only, unimplemented | **no** |
 | `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized 2026-08-25; the robot's gateway advertises and serves it whenever its motion stack is up (hardware-verified through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
+| `named_navigation` — map-bound named waypoint operations | **no** | **yes** when the navigation manager is available |
+| `sensor_streams` — opt-in filtered LiDAR and IMU session frames | **no** | **yes**; publisher presence is reported separately in `sensor_stream_status` |
 
 Unknown entries MUST be ignored rather than treated as errors, so a newer robot
 can advertise capabilities this client has never heard of.

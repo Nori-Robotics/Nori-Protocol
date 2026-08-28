@@ -1,0 +1,11 @@
+{
+  "type": "navigation_status",
+  "request_id": "9267f10d-f6d2-497b-9962-b0ba881254f5",
+  "ok": true,
+  "state": "idle",
+  "active": false,
+  "map_sha256": "7f7061f88844f306ae399be85544c50e68ba6fdf232a16595b5c49d32f706b6f",
+  "waypoints": [
+    { "name": "charging station", "saved_at_unix": 1787860800.0 }
+  ]
+}

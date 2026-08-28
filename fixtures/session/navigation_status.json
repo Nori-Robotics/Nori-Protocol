@@ -1,0 +1,13 @@
+{
+  "type": "navigation_status",
+  "request_id": "2776adbf-44d1-4887-bcf0-a175ae186d1b",
+  "goal_id": "90b234d9-9582-4d5b-9792-7f81080a4dcb",
+  "ok": true,
+  "state": "navigating",
+  "active": true,
+  "name": "charging station",
+  "map_sha256": "7f7061f88844f306ae399be85544c50e68ba6fdf232a16595b5c49d32f706b6f",
+  "distance_remaining_m": 1.42,
+  "estimated_time_remaining_s": 8.5,
+  "number_of_recoveries": 0
+}

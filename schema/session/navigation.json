@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/navigation.json",
+  "title": "navigation",
+  "description": "Client -> robot. Correlated named-waypoint navigation operations. Every request_id is idempotent for the lifetime of the robot session: retrying the same request_id must return the same result and must never start a second physical goal. A start request is explicit authorization to move; conversational or UI confirmation belongs in the client. The robot remains responsible for session authorization, localization, active-map matching, Nav2 readiness and E-stop enforcement.",
+  "type": "object",
+  "required": ["type", "request_id", "action"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "navigation" },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Client-generated idempotency and response-correlation key."
+    },
+    "action": {
+      "enum": [
+        "list_waypoints",
+        "remember_waypoint",
+        "delete_waypoint",
+        "start",
+        "cancel",
+        "status"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Named waypoint on the robot's active saved map. Required by remember_waypoint, delete_waypoint and start."
+    },
+    "goal_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Client-generated goal identity. Required by start; optional on cancel/status to address one goal explicitly."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": { "enum": ["remember_waypoint", "delete_waypoint", "start"] }
+        }
+      },
+      "then": { "required": ["name"] }
+    },
+    {
+      "if": { "properties": { "action": { "const": "start" } } },
+      "then": { "required": ["goal_id"] }
+    }
+  ]
+}

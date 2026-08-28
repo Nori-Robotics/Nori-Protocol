@@ -74,6 +74,12 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 | C→R | `record` | `schema/session/record.json` | six canonical verbs + five legacy aliases still in the wild |
 | C→R | `policy_stream` | `schema/session/policy_stream.json` | capability-gated |
 | C→R | `call` | `schema/session/call.json` | capability-gated; two-way audio |
+| C→R | `navigation` | `schema/session/navigation.json` | capability `named_navigation`; correlated map-bound waypoint operations |
+| R→C | `navigation_status` | `schema/session/navigation_status.json` | direct replies and unsolicited goal lifecycle snapshots |
+| C→R | `sensor_stream` | `schema/session/sensor_stream.json` | capability `sensor_streams`; opt-in LiDAR/IMU rates and LiDAR point bound |
+| R→C | `sensor_stream_status` | `schema/session/sensor_stream_status.json` | correlated effective configuration and current ROS publisher presence |
+| R→C | `lidar_scan` | `schema/session/lidar_scan.json` | sampled filtered `/scan`; invalid ROS values are `null` |
+| R→C | `imu` | `schema/session/imu.json` | `/imu/data` quaternion, SI vectors and covariance arrays |
 | R→C | `camera_layout` | `schema/session/camera_layout.json` | how to slice the single composited track; **not** derived from `descriptor.cameras` |
 | R→C | `daemon_status` | `schema/session/daemon_status.json` | motion health as seen by the bridge — the daemon cannot report its own absence |
 | R→C | `record_status` | `schema/session/record_status.json` | one per verb, no correlation id |

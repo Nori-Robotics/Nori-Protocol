@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/lidar_scan.json",
+  "title": "lidar_scan",
+  "description": "Robot -> client. Rate-limited, optionally uniformly sampled sensor_msgs/LaserScan from filtered /scan. Null entries represent non-finite ROS values. Observational only, not a safety path.",
+  "type": "object",
+  "required": ["type", "stamp", "frame_id", "angle_min_rad", "angle_max_rad", "angle_increment_rad", "time_increment_s", "scan_time_s", "range_min_m", "range_max_m", "source_points", "ranges_m"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "lidar_scan" },
+    "stamp": {
+      "type": "object",
+      "required": ["sec", "nanosec"],
+      "additionalProperties": false,
+      "properties": {
+        "sec": { "type": "integer", "minimum": 0 },
+        "nanosec": { "type": "integer", "minimum": 0, "maximum": 999999999 }
+      }
+    },
+    "frame_id": { "type": "string" },
+    "angle_min_rad": { "type": "number" },
+    "angle_max_rad": { "type": "number" },
+    "angle_increment_rad": { "type": "number" },
+    "time_increment_s": { "type": "number", "minimum": 0 },
+    "scan_time_s": { "type": "number", "minimum": 0 },
+    "range_min_m": { "type": "number", "minimum": 0 },
+    "range_max_m": { "type": "number", "minimum": 0 },
+    "source_points": { "type": "integer", "minimum": 0 },
+    "ranges_m": { "type": "array", "maxItems": 1440, "items": { "type": ["number", "null"] } },
+    "intensities": { "type": "array", "maxItems": 1440, "items": { "type": ["number", "null"] } }
+  }
+}

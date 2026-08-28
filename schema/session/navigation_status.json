@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/navigation_status.json",
+  "title": "navigation_status",
+  "description": "Robot -> client. Correlated reply to a navigation request or an unsolicited lifecycle/feedback snapshot. Snapshots are self-contained and keyed by goal_id, so clients tolerate loss, duplication and reordering. request_id is present on direct replies and absent on unsolicited updates.",
+  "type": "object",
+  "required": ["type", "ok", "state", "active"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "navigation_status" },
+    "request_id": { "type": "string", "format": "uuid" },
+    "goal_id": { "type": "string", "format": "uuid" },
+    "ok": { "type": "boolean" },
+    "state": {
+      "enum": [
+        "idle",
+        "starting",
+        "navigating",
+        "canceling",
+        "succeeded",
+        "canceled",
+        "aborted",
+        "failed",
+        "unavailable"
+      ]
+    },
+    "active": { "type": "boolean" },
+    "name": { "type": "string" },
+    "map_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "distance_remaining_m": { "type": "number", "minimum": 0 },
+    "estimated_time_remaining_s": { "type": "number", "minimum": 0 },
+    "number_of_recoveries": { "type": "integer", "minimum": 0 },
+    "error_code": { "type": "integer", "minimum": 0 },
+    "error": { "type": "string" },
+    "replaced": { "type": "boolean" },
+    "deleted": { "type": "boolean" },
+    "waypoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "saved_at_unix"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "saved_at_unix": { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

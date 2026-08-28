@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/sensor_stream_status.json",
+  "title": "sensor_stream_status",
+  "description": "Robot -> client. Correlated effective sensor-stream configuration and current ROS publisher presence. Availability can change; actual data frames remain authoritative.",
+  "type": "object",
+  "required": ["type", "request_id", "ok", "lidar_hz", "imu_hz", "lidar_max_points", "lidar_available", "imu_available"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "sensor_stream_status" },
+    "request_id": { "type": "string", "format": "uuid" },
+    "ok": { "type": "boolean" },
+    "lidar_hz": { "type": "number", "minimum": 0, "maximum": 10 },
+    "imu_hz": { "type": "number", "minimum": 0, "maximum": 50 },
+    "lidar_max_points": { "type": "integer", "minimum": 16, "maximum": 1440 },
+    "lidar_available": { "type": "boolean" },
+    "imu_available": { "type": "boolean" },
+    "error": { "type": "string" }
+  }
+}

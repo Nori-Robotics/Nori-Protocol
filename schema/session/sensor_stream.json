@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nori.dev/protocol/session/sensor_stream.json",
+  "title": "sensor_stream",
+  "description": "Client -> robot. Correlated configuration or status request for the opt-in LiDAR and IMU streams. Rates are upper bounds; a sensor publishes no faster than its ROS source. Zero disables that stream. Reusing a request_id is idempotent for the robot-session lifetime.",
+  "type": "object",
+  "required": ["type", "request_id", "action"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "sensor_stream" },
+    "request_id": { "type": "string", "format": "uuid" },
+    "action": { "enum": ["configure", "status"] },
+    "lidar_hz": { "type": "number", "minimum": 0, "maximum": 10 },
+    "imu_hz": { "type": "number", "minimum": 0, "maximum": 50 },
+    "lidar_max_points": { "type": "integer", "minimum": 16, "maximum": 1440 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "const": "configure" } } },
+      "then": {
+        "anyOf": [
+          { "required": ["lidar_hz"] },
+          { "required": ["imu_hz"] },
+          { "required": ["lidar_max_points"] }
+        ]
+      }
+    }
+  ]
+}

@@ -9,6 +9,31 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-08-28 — opt-in LiDAR and IMU streams (additive)
+
+- Added correlated `sensor_stream` configuration/status requests, capability
+  `sensor_streams`, and robot replies containing effective rate limits plus current
+  ROS publisher presence. A zero rate disables that sensor; retrying one request ID
+  is idempotent.
+- Added `lidar_scan` from the filtered `/scan` topic with a client-selected point
+  bound (uniform integer-stride sampling) and `null` for non-finite readings. Added
+  `imu` from `/imu/data`, preserving quaternion, SI vectors and ROS covariance arrays.
+- Streams are opt-in and bounded to keep large JSON scans from monopolizing the same
+  WebRTC data channel used by control and navigation. No protocol version bump.
+
+## 2026-08-27 — named waypoint navigation (additive)
+
+- Added correlated `navigation` requests and self-contained `navigation_status`
+  snapshots to the session layer. Requests cover list, remember, delete, start,
+  cancel and status for waypoints bound to the active saved map.
+- Added capability `named_navigation`. Start requests carry a client-generated
+  `goal_id`; every request carries a UUID `request_id` which the robot treats as
+  idempotent so transport retries cannot start duplicate physical goals.
+- Confirmation is intentionally not a wire verb: an explicit SDK start is the
+  authorization boundary, while voice and graphical clients may impose their
+  own confirmation policy. Robot-side E-stop, localization, active-map and Nav2
+  readiness checks remain mandatory. No protocol version bump.
+
 ## 2026-08-26 — `yaw` task-jog short; `shoulder_pan` deprecated as its alias (additive)
 
 - **`yaw` is the canonical task-space short** for the angular-z of the base-frame twist

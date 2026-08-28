@@ -1,0 +1,15 @@
+{
+  "type": "lidar_scan",
+  "stamp": { "sec": 1787884800, "nanosec": 123456789 },
+  "frame_id": "laser",
+  "angle_min_rad": -3.14159,
+  "angle_max_rad": 1.570795,
+  "angle_increment_rad": 1.570795,
+  "time_increment_s": 0.0002,
+  "scan_time_s": 0.1,
+  "range_min_m": 0.05,
+  "range_max_m": 12.0,
+  "source_points": 6,
+  "ranges_m": [1.25, null, 0.8, 2.4],
+  "intensities": [10.0, 0.0, 22.0, 5.0]
+}

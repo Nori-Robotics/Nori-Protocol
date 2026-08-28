@@ -1,0 +1,11 @@
+{
+  "type": "imu",
+  "stamp": { "sec": 1787884800, "nanosec": 987654321 },
+  "frame_id": "imu_link",
+  "orientation_xyzw": [0.0, 0.0, 0.382683, 0.92388],
+  "orientation_covariance": [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.02],
+  "angular_velocity_rad_s": [0.01, -0.02, 0.3],
+  "angular_velocity_covariance": [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01],
+  "linear_acceleration_m_s2": [0.1, 0.2, 9.81],
+  "linear_acceleration_covariance": [0.04, 0.0, 0.0, 0.0, 0.04, 0.0, 0.0, 0.0, 0.04]
+}
