@@ -4,10 +4,15 @@
   "title": "record",
   "description": "Client -> robot. Dataset recording verbs. Every verb draws exactly ONE record_status reply, so a client may await each one -- but replies carry no correlation id, so a client MUST NOT have two record verbs in flight at once. After a timeout, drop the waiter AND treat the next unsolicited status as unowned, or the correlation goes permanently off by one.\n\nTHE VERBS ARE NOT ALL SAFE. Read the per-verb notes below before wiring a UI to any of them: `session_discard` / `discard` / `discard_last` DESTROY recorded data, and on L2 `stop` closes the whole session rather than just the episode. Two verbs that look adjacent can be opposites.\n\nCanonical lifecycle:\n  session_start -> episode_start -> (episode_stop | episode_discard) -> ... -> session_end\n\nThe robot is resilient to a dropped session_start: an episode_start with no open session opens one implicitly.",
   "type": "object",
-  "required": ["type", "action"],
+  "required": [
+    "type",
+    "action"
+  ],
   "additionalProperties": false,
   "properties": {
-    "type": { "const": "record" },
+    "type": {
+      "const": "record"
+    },
     "action": {
       "enum": [
         "session_start",
@@ -27,6 +32,29 @@
     "task": {
       "type": "string",
       "description": "Free-text task label recorded with the episode. Meaningful only on the verbs that OPEN something (session_start, episode_start, legacy start); ignored elsewhere."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "maxItems": 8,
+      "description": "episode_start only: labels stored with the episode. They can select recorder behaviour (\"aspire\" = the long action-silence window for agent takes)."
+    },
+    "outcome": {
+      "enum": [
+        "success",
+        "failure",
+        "aborted"
+      ],
+      "description": "episode_stop only. Omitted = success (a human stop). An unknown value is refused with record_status ok:false, never stored as success."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "episode_stop only: free text stored with the episode."
     }
   }
 }
