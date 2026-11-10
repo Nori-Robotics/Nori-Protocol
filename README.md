@@ -71,7 +71,7 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 | Direction | type | schema | notes |
 |---|---|---|---|
 | C→R | `video` | `schema/session/video.json` | pause/resume, bitrate, or quality — exactly one per frame |
-| C→R | `record` | `schema/session/record.json` | six canonical verbs + five legacy aliases still in the wild |
+| C→R | `record` | `schema/session/record.json` | legacy lifecycle plus opt-in L3 review; see recording compatibility below |
 | C→R | `policy_stream` | `schema/session/policy_stream.json` | capability-gated |
 | C→R | `call` | `schema/session/call.json` | capability-gated; two-way audio |
 | C→R | `navigation` | `schema/session/navigation.json` | capability `named_navigation`; correlated map-bound waypoint operations |
@@ -82,8 +82,71 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 | R→C | `imu` | `schema/session/imu.json` | `/imu/data` quaternion, SI vectors and covariance arrays |
 | R→C | `camera_layout` | `schema/session/camera_layout.json` | how to slice the single composited track; **not** derived from `descriptor.cameras` |
 | R→C | `daemon_status` | `schema/session/daemon_status.json` | motion health as seen by the bridge — the daemon cannot report its own absence |
-| R→C | `record_status` | `schema/session/record_status.json` | one per verb, no correlation id |
+| R→C | `record_status` | `schema/session/record_status.json` | request_id echo when supplied on supporting L3; legacy replies are uncorrelated |
 | R→C | `policy_stream_status` | `schema/session/policy_stream_status.json` | reply only — a stream that dies mid-run is observable **only by polling** |
+
+## Recording compatibility
+
+The review extension is additive under protocol version **1**. Existing verbs,
+required fields and field types are preserved. Legacy clients can continue
+sending `record` without `episode_id`, `review_required` or `request_id`.
+Updated runtime clients must ignore unknown response fields (see Rules below);
+strict schemas are conformance checks, not a promise that new responses validate
+against an older closed schema.
+
+| Client and robot | Recording behavior |
+|---|---|
+| Legacy client, updated L3 | Existing start/stop/status and alias behavior is preserved. Stop retains the take for upload; no review hold is inferred. |
+| Review client, supporting L3 | Explicit `review_required: true` holds the stopped take until acknowledged Keep or Reject. |
+| Review client, older L3 or L2 | Review is unsupported. Do not start review-mode capture or assume deletion succeeded. |
+
+Discover support through `record_status.review_supported` (`status` on updated
+L3 reports it; `review_status` also lists pending owned reviews). Missing/false
+support or a timed-out/uncorrelated review probe means unsupported. An older
+robot may ignore unknown fields on `episode_start`, so sending
+`review_required: true` without first establishing support can create an
+ordinary uploadable take. The review UI must gate capture before sending Start.
+
+For opted-in L3 recording:
+
+```
+episode_start {review_required:true}
+  -> episode_stop
+  -> episode_keep {episode_id} OR episode_reject {episode_id}
+```
+
+Only the new decision verbs require `episode_id`. It is the stable identifier
+returned by Start/Stop, distinct from display-only `episode`. Keep releases the
+hold; Reject deletes only that pending take. `review_status` recovers the
+operator's pending reviews after reconnect. A legacy `session_end` or disconnect
+does not release a hold. `OUTCOME_DISCARDED` retains its existing L3 meaning:
+retained raw data marked discarded, rather than explicit review deletion.
+
+For correlated calls, use one request at a time and retry the same ID only for
+the identical operation. The gateway caches 128 replies per connection. Never
+let an absent or mismatched `request_id` complete a newer waiter. After
+reconnect, recover review state and retry Keep/Reject by stable episode ID.
+
+Existing stack differences remain important:
+
+| Verb | L2 | L3 |
+|---|---|---|
+| `episode_stop` | Keep the episode; leave the session open | Finalize and retain, or hold if explicitly opted into review |
+| `episode_discard` | Drop the active episode | Finalize the active episode with retained DISCARDED outcome; not post-stop deletion |
+| `session_end` | Close and keep the session; an empty session is removed | Close collection bookkeeping; do not release pending reviews |
+| `session_discard` | Destroy the whole current/recent session unless already uploaded | Close collection bookkeeping without deletion |
+| Legacy `start` | Open session and episode | Open collection and episode |
+| Legacy `stop` | Finalize episode **and end the session** | Finalize only the episode |
+| Legacy `discard` / `discard_last` | Session deletion (`discard_last` targets the most recent session) | Close collection bookkeeping without deletion |
+
+Prefer explicit canonical verbs. Never use a session-wide/legacy discard alias
+as a substitute for targeted `episode_reject`. Notes belong to `episode_stop`
+(and legacy `stop`); `episode_discard` continues to ignore them.
+
+`nori:review-required` is a reserved gateway-to-recorder tag. Clients use the
+`review_required` field instead of supplying that tag. Client-supplied copies are
+ignored by L3; omitting the flag must never accidentally enable a review hold.
+All other client tags keep the existing limits and behavior.
 
 ## Rules
 - **Framing:** newline-delimited JSON over TCP (TLS on WAN). One object per line, UTF-8.
@@ -96,7 +159,7 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 
 ## CI
 ```bash
-python validate.py        # exits non-zero on any schema/fixture mismatch
+python validate.py        # fixtures, schema rules and recording compatibility cases
 ```
 Consumers: the robot's on-board daemon, the browser app, the robot's ROS 2 gateway, and both operator SDKs (`@nori/sdk`, `nori-sdk`) — each running `validate.py` plus their own golden-fixture decode tests against `fixtures/`.
 

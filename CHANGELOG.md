@@ -18,6 +18,10 @@ turned out to be the question that costs the most to answer after the fact.
   Clients await acknowledgements and recover pending reviews after reconnect.
 - Existing unreviewed recording and retained L3 DISCARDED outcomes are unchanged.
   L2 does not implement the extension. No protocol version bump.
+- Require `episode_id` only for Keep/Reject; legacy requests retain their
+  existing required fields. Validation includes negative decision cases and
+  legacy field-limit checks. Clarified correlation, reserved-tag behavior,
+  and unchanged L2/L3 stop/discard differences.
 
 ## 2026-08-28 — opt-in LiDAR and IMU streams (additive)
 

@@ -1,0 +1,5 @@
+{
+  "type": "record",
+  "action": "review_status",
+  "request_id": "review-status-1"
+}

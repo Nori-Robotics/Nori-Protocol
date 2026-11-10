@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/session/record_status.json",
   "title": "record_status",
-  "description": "Robot -> client. The reply to every record verb, and the whole recording state each time -- it is a snapshot, not a delta, so a client that misses one is not left inconsistent.\n\n`ok: false` is an ordinary outcome, not a transport error: \"already recording an episode\", \"not recording\", \"nothing to discard\", \"already uploaded -- cannot discard\". A client polling with action \"status\" against a robot that has recording disabled will see ok:false routinely, so treat it as state rather than raising.\n\nThe L2 recorder sends every field below on every reply; the L3 gateway sends a subset. Treat any field as optional.",
+  "description": "Robot -> client. The reply to every record verb, and the whole recording state each time -- it is a snapshot, not a delta, so a client that misses one is not left inconsistent.\n\n`ok: false` is an ordinary outcome, not a transport error: \"already recording an episode\", \"not recording\", \"nothing to discard\", \"already uploaded -- cannot discard\". A client polling with action \"status\" against a robot that has recording disabled will see ok:false routinely, so treat it as state rather than raising.\n\nField availability depends on stack and service support. Older L2/L3 peers omit the review fields and request_id; only type and ok are required. A supporting L3 gateway echoes request_id only when supplied. Treat absent review_supported as unsupported and never satisfy a correlated waiter with an uncorrelated legacy reply.",
   "type": "object",
   "required": [
     "type",
@@ -44,7 +44,7 @@
         "string",
         "null"
       ],
-      "description": "Display id of the open episode, or null when none is open. TWO SHAPES, and a client must accept both: L3 sends a bare \"episode-NNNN\" (a per-session counter; the on-disk id is a UUID and internal), while L2 sends \"<session>/episode-NNNN\" -- which on L2 IS the on-disk path. Match on the trailing segment if you need the episode number."
+      "description": "Display ID of the open episode, or null when none is open. Accept both L3 episode-NNNN and L2 <session>/episode-NNNN shapes. Match the trailing segment for the episode number. On review-capable L3, use the separate stable episode_id for Keep/Reject; the display ID is not a review identifier."
     },
     "free_gb": {
       "type": "number",
@@ -71,7 +71,8 @@
     "request_id": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 128
+      "maxLength": 128,
+      "description": "Echoed for a correlated request on supporting L3 gateways; omitted for legacy requests and older peers. An absent or different ID cannot complete a correlated request."
     },
     "review_supported": {
       "type": "boolean",

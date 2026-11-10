@@ -142,6 +142,54 @@ def check_schema_rules(schemas: dict[str, dict], fixtures: list[Path]) -> int:
     return failures
 
 
+def check_recording_compatibility(schemas: dict[str, dict], registry) -> int:
+    """Pin legacy requests and negative cases that positive fixtures cannot test."""
+    legacy_actions = (
+        "session_start", "episode_start", "episode_stop", "episode_discard",
+        "session_end", "session_discard", "status", "start", "stop",
+        "discard", "discard_last",
+    )
+    cases = [
+        (f"{action} without episode_id", {"type": "record", "action": action}, True)
+        for action in (*legacy_actions, "review_status")
+    ]
+    for action in ("episode_keep", "episode_reject"):
+        request = {"type": "record", "action": action}
+        cases.append((f"{action} missing episode_id", request, False))
+        for value in ("", None, 7, []):
+            cases.append((f"{action} invalid episode_id {value!r}",
+                          {**request, "episode_id": value}, False))
+        cases.append((f"{action} with episode_id",
+                      {**request, "episode_id": "f8749688-86b0-4316-8fa3-66f609b112cc"}, True))
+    cases.extend([
+        ("legacy stop with notes", {"type": "record", "action": "episode_stop",
+                                    "outcome": "failure", "notes": "box tipped"}, True),
+        ("legacy tags at limits", {"type": "record", "action": "episode_start",
+                                   "tags": ["x" * 64] * 8}, True),
+        ("legacy too many tags", {"type": "record", "action": "episode_start",
+                                  "tags": ["x"] * 9}, False),
+        ("legacy too long tag", {"type": "record", "action": "episode_start",
+                                 "tags": ["x" * 65]}, False),
+        ("legacy notes at limit", {"type": "record", "action": "episode_stop",
+                                   "notes": "x" * 2000}, True),
+        ("legacy notes too long", {"type": "record", "action": "episode_stop",
+                                   "notes": "x" * 2001}, False),
+        ("legacy response without review fields", {"type": "record_status", "ok": True}, True),
+    ])
+    validators = {
+        name: validator_for(schemas[f"session/{name}"], registry)
+        for name in ("record", "record_status")
+    }
+    failures = 0
+    for label, message, expected in cases:
+        if validators[message["type"]].is_valid(message) != expected:
+            print(f"FAIL recording compatibility: {label} should "
+                  f"{'validate' if expected else 'be rejected'}")
+            failures += 1
+    print(f"{len(cases)} recording compatibility cases, {failures} failure(s)")
+    return failures
+
+
 def main() -> int:
     expected_version = int((ROOT / "VERSION").read_text().strip())
 
@@ -205,6 +253,7 @@ def main() -> int:
         print(f"ok   {name} ({mtype})")
 
     failures += check_schema_rules(schemas, fixtures)
+    failures += check_recording_compatibility(schemas, registry)
 
     print(
         f"\n{len(fixtures)} fixtures, {len(schemas)} schemas, "

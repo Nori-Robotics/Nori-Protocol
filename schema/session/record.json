@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/session/record.json",
   "title": "record",
-  "description": "Client -> robot. Legacy recording verbs remain available. L3 app review is opt-in: episode_start with review_required:true -> episode_stop -> episode_keep OR episode_reject (both require the stable episode_id) -> session_end. Check review_supported via review_status before starting. An awaiting-review episode is excluded from backend registration and upload, including across restarts. Keep releases it; Reject deletes only that episode. A review_status lists the authenticated operator's pending episodes and restores their active review capture. No operator identity is accepted from the client. New clients use request_id, echoed in the reply: retry the SAME ID for the SAME operation; one request at a time. The gateway caches 128 replies per connection. After reconnect, query review_status and retry the durable Keep/Reject decision by episode ID. Legacy replies without request_id cannot be correlated and must not complete a new request. L2 does not implement this review extension. Legacy session_discard/discard/discard_last differ by stack: L2 destroys data, L3 closes collection bookkeeping without deletion. Never use those aliases for episode review.",
+  "description": "Client -> robot. Legacy recording verbs remain available. L3 app review is opt-in: episode_start with review_required:true -> episode_stop -> episode_keep OR episode_reject (both require the stable episode_id) -> session_end. Check review_supported via review_status before starting. An awaiting-review episode is excluded from backend registration and upload, including across restarts. Keep releases it; Reject deletes only that episode. A review_status lists the authenticated operator's pending episodes and restores their active review capture. No operator identity is accepted from the client. New clients use request_id, echoed in the reply: retry the SAME ID for the SAME operation; one request at a time. The gateway caches 128 replies per connection. After reconnect, query review_status and retry the durable Keep/Reject decision by episode ID. Legacy replies without request_id cannot be correlated and must not complete a new request. L2 does not implement this review extension. Legacy session_discard/discard/discard_last differ by stack: L2 destroys data, L3 closes collection bookkeeping without deletion. Never use those aliases for episode review. Legacy stop differs by stack: on L2 it ends the session as well as the episode; on L3 it finalizes only the episode. Client-supplied nori:review-required tags are reserved and ignored; only review_required:true on episode_start opts into review.",
   "type": "object",
   "required": [
     "type",
@@ -30,7 +30,7 @@
         "episode_keep",
         "episode_reject"
       ],
-      "description": "L3: episode_start starts capture. Without review_required, episode_stop finalizes and retains the take for upload. With review_required, it holds the stopped take for an explicit episode_keep or episode_reject. episode_discard finalizes the ACTIVE take with a retained DISCARDED outcome on L3; it is not post-stop deletion. session_start/end manage collection bookkeeping and never release a review hold. review_status lists pending episodes for the authenticated operator. L2 legacy behavior is unchanged: episode_discard destroys an episode and session_discard destroys the session. Prefer explicit review verbs on supporting L3 robots."
+      "description": "L3: episode_start starts capture. Without review_required, episode_stop finalizes and retains the take for upload. With review_required, it holds the stopped take for an explicit episode_keep or episode_reject. episode_discard finalizes the ACTIVE take with a retained DISCARDED outcome on L3; it is not post-stop deletion. session_start/end manage collection bookkeeping and never release a review hold. review_status lists pending episodes for the authenticated operator. L2 legacy behavior is unchanged: episode_discard destroys an episode and session_discard destroys the session. Prefer explicit review verbs on supporting L3 robots. Legacy start opens both a session and an episode. Legacy stop ends the entire session on L2, but only finalizes the episode on L3. On L2, discard aliases session_discard and discard_last targets the most recent session; on L3 both only close collection bookkeeping. Do not replace episode_reject with any legacy discard alias."
     },
     "task": {
       "type": "string",
@@ -62,7 +62,7 @@
         "maxLength": 64
       },
       "maxItems": 8,
-      "description": "episode_start only: labels stored with the episode. They can select recorder behaviour (\"aspire\" = the long action-silence window for agent takes)."
+      "description": "episode_start only: labels stored with the episode. They can select recorder behaviour (\"aspire\" = the long action-silence window for agent takes). The nori:review-required label is reserved for gateway-to-recorder control. The L3 gateway removes client-supplied copies and inserts it only for an explicit review_required:true request; other labels retain their existing behavior."
     },
     "outcome": {
       "enum": [
@@ -75,7 +75,29 @@
     "notes": {
       "type": "string",
       "maxLength": 2000,
-      "description": "episode_stop only: free text stored with the episode."
+      "description": "episode_stop (including legacy stop) only: free text stored with the episode. Ignored by episode_discard, preserving legacy behavior."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": [
+              "episode_keep",
+              "episode_reject"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "required": [
+          "episode_id"
+        ]
+      }
+    }
+  ]
 }
