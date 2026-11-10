@@ -2,12 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/session/record.json",
   "title": "record",
-  "description": "Client -> robot. Dataset recording verbs. Every verb draws exactly ONE record_status reply, so a client may await each one -- but replies carry no correlation id, so a client MUST NOT have two record verbs in flight at once. After a timeout, drop the waiter AND treat the next unsolicited status as unowned, or the correlation goes permanently off by one.\n\nTHE VERBS ARE NOT ALL SAFE. Read the per-verb notes below before wiring a UI to any of them: `session_discard` / `discard` / `discard_last` DESTROY recorded data, and on L2 `stop` closes the whole session rather than just the episode. Two verbs that look adjacent can be opposites.\n\nCanonical lifecycle:\n  session_start -> episode_start -> (episode_stop | episode_discard) -> ... -> session_end\n\nThe robot is resilient to a dropped session_start: an episode_start with no open session opens one implicitly.",
+  "description": "Client -> robot. Legacy recording verbs remain available. L3 app review is opt-in: episode_start with review_required:true -> episode_stop -> episode_keep OR episode_reject (both require the stable episode_id) -> session_end. Check review_supported via review_status before starting. An awaiting-review episode is excluded from backend registration and upload, including across restarts. Keep releases it; Reject deletes only that episode. A review_status lists the authenticated operator's pending episodes and restores their active review capture. No operator identity is accepted from the client. New clients use request_id, echoed in the reply: retry the SAME ID for the SAME operation; one request at a time. The gateway caches 128 replies per connection. After reconnect, query review_status and retry the durable Keep/Reject decision by episode ID. Legacy replies without request_id cannot be correlated and must not complete a new request. L2 does not implement this review extension. Legacy session_discard/discard/discard_last differ by stack: L2 destroys data, L3 closes collection bookkeeping without deletion. Never use those aliases for episode review.",
   "type": "object",
-  "required": ["type", "action"],
+  "required": [
+    "type",
+    "action"
+  ],
   "additionalProperties": false,
   "properties": {
-    "type": { "const": "record" },
+    "type": {
+      "const": "record"
+    },
     "action": {
       "enum": [
         "session_start",
@@ -20,13 +25,50 @@
         "start",
         "stop",
         "discard",
-        "discard_last"
+        "discard_last",
+        "review_status",
+        "episode_keep",
+        "episode_reject"
       ],
-      "description": "Semantics, and they differ per stack where noted -- verified against the L2 recorder the robot's recorder and the L3 gateway (nori_gateway/protocol.py).\n\nKEEPS DATA:\n  session_start   open a collection.\n  episode_start   open an episode (opens a session too if none is open).\n  episode_stop    finalise and KEEP the open episode.\n  session_end     close the session and keep it for shipping. On L2 a session that kept no episodes is removed, since there is nothing to ship.\n  status          read-only.\n\nDESTROYS DATA:\n  episode_discard   finalise and DROP the open episode.\n  session_discard   drop the ENTIRE open session, or -- if issued just after session_end -- the most recent one. On L2 this is shutil.rmtree. It refuses only if the session already reached `uploaded`. This is NOT a synonym for session_end; they are opposites. It is also NOT a legacy alias, despite riding next to them.\n\nLEGACY ALIASES, retained because deployed clients still send them:\n  start          L2/L3: open a session AND an episode.\n  stop           L3: finalise the episode. L2: finalise the episode AND END THE SESSION. A client using `stop` between episodes on an L2 gets a different session than it expects.\n  discard        alias for session_discard on L2 (destroys). On L3 it is folded into session_end (keeps).\n  discard_last   alias for session_discard on L2, targeting the most recent session.\n\nThe divergence in `discard` between stacks is real and unresolved: the same verb keeps data on one model and destroys it on the other. Prefer the explicit canonical verbs and do not build a UI on `discard`."
+      "description": "L3: episode_start starts capture. Without review_required, episode_stop finalizes and retains the take for upload. With review_required, it holds the stopped take for an explicit episode_keep or episode_reject. episode_discard finalizes the ACTIVE take with a retained DISCARDED outcome on L3; it is not post-stop deletion. session_start/end manage collection bookkeeping and never release a review hold. review_status lists pending episodes for the authenticated operator. L2 legacy behavior is unchanged: episode_discard destroys an episode and session_discard destroys the session. Prefer explicit review verbs on supporting L3 robots."
     },
     "task": {
       "type": "string",
       "description": "Free-text task label recorded with the episode. Meaningful only on the verbs that OPEN something (session_start, episode_start, legacy start); ignored elsewhere."
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Correlation and replay key; reuse only for retries of the identical request."
+    },
+    "review_required": {
+      "type": "boolean",
+      "description": "episode_start opt-in; persists the review hold before capture begins. Requires review_supported."
+    },
+    "episode_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable ID returned by episode_start/episode_stop, required for episode_keep/episode_reject."
+    },
+    "stereo": {
+      "type": "boolean"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outcome": {
+      "enum": [
+        "success",
+        "failure",
+        "aborted"
+      ]
+    },
+    "notes": {
+      "type": "string"
     }
   }
 }

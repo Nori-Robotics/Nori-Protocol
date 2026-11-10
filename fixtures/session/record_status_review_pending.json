@@ -1,0 +1,16 @@
+{
+  "type": "record_status",
+  "ok": true,
+  "recording": false,
+  "session_open": true,
+  "episodes_kept": 0,
+  "review_supported": true,
+  "request_id": "review-status-1",
+  "active_review_episode_id": "",
+  "pending_reviews": [
+    {
+      "episode_id": "f8749688-86b0-4316-8fa3-66f609b112cc",
+      "task": "issue38"
+    }
+  ]
+}

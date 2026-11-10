@@ -9,6 +9,16 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
+## 2026-11-10 — explicit L3 episode review (additive)
+
+- Added opt-in `review_required` capture, stable `episode_id`, `review_status`,
+  `episode_keep` and `episode_reject`. Pending takes survive restart and cannot
+  register or upload until kept. Reject deletes only the named pending episode.
+- Added correlated `request_id` replies/replay and `review_supported` discovery.
+  Clients await acknowledgements and recover pending reviews after reconnect.
+- Existing unreviewed recording and retained L3 DISCARDED outcomes are unchanged.
+  L2 does not implement the extension. No protocol version bump.
+
 ## 2026-08-28 — opt-in LiDAR and IMU streams (additive)
 
 - Added correlated `sensor_stream` configuration/status requests, capability

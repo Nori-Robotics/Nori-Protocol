@@ -4,34 +4,59 @@
   "title": "record_status",
   "description": "Robot -> client. The reply to every record verb, and the whole recording state each time -- it is a snapshot, not a delta, so a client that misses one is not left inconsistent.\n\n`ok: false` is an ordinary outcome, not a transport error: \"already recording an episode\", \"not recording\", \"nothing to discard\", \"already uploaded -- cannot discard\". A client polling with action \"status\" against a robot that has recording disabled will see ok:false routinely, so treat it as state rather than raising.\n\nThe L2 recorder sends every field below on every reply; the L3 gateway sends a subset. Treat any field as optional.",
   "type": "object",
-  "required": ["type", "ok"],
+  "required": [
+    "type",
+    "ok"
+  ],
   "additionalProperties": false,
   "properties": {
-    "type": { "const": "record_status" },
-    "ok": { "type": "boolean" },
-    "recording": { "type": "boolean", "description": "An episode is currently open." },
-    "session_open": { "type": "boolean" },
+    "type": {
+      "const": "record_status"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "recording": {
+      "type": "boolean",
+      "description": "An episode is currently open."
+    },
+    "session_open": {
+      "type": "boolean"
+    },
     "stereo": {
       "type": "boolean",
       "description": "L3: echoed on every reply while a session opened with stereo capture is open, and only then -- the UI reports stereo enforcement solely from this echo, so a robot predating the vocabulary stays silent rather than promising. Fixed at session open; a mid-session flag on the verb is ignored."
     },
     "session": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "L2: the session directory name, e.g. \"20260729T201358Z-nori-l2-1002\". Absent on L3, which has no session directory."
     },
     "episodes_kept": {
       "type": "integer",
       "minimum": 0,
-      "description": "Episodes finalised and retained in the current session (discards do not count)."
+      "description": "Episodes kept in this gateway collection. Review-mode Stop does not increment; successful Keep does, once per ID. Legacy Stop counts immediately. This is not upload status."
     },
     "episode": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Display id of the open episode, or null when none is open. TWO SHAPES, and a client must accept both: L3 sends a bare \"episode-NNNN\" (a per-session counter; the on-disk id is a UUID and internal), while L2 sends \"<session>/episode-NNNN\" -- which on L2 IS the on-disk path. Match on the trailing segment if you need the episode number."
     },
-    "free_gb": { "type": "number", "minimum": 0, "description": "Free space on the recording volume." },
+    "free_gb": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Free space on the recording volume."
+    },
     "dropped_frames_est": {
       "type": "object",
-      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
       "description": "L2: estimated dropped frames per camera role for the open episode. Empty when no episode is open."
     },
     "queue_drops": {
@@ -42,6 +67,53 @@
     "error": {
       "type": "string",
       "description": "Set when ok is false. NOT guaranteed present: the L3 gateway can emit ok:false with an empty service message, which it then omits. Do not rely on this to explain a failure."
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "review_supported": {
+      "type": "boolean",
+      "description": "True only when the robot review service is available. Do not assume support when absent."
+    },
+    "episode_id": {
+      "type": "string",
+      "description": "Stable ID of the started/stopped/resolved episode; distinct from the display-only episode field."
+    },
+    "active_review_episode_id": {
+      "type": "string",
+      "description": "Owned active capture restored by review_status; empty if none."
+    },
+    "pending_reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "episode_id",
+          "task"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "episode_id": {
+            "type": "string"
+          },
+          "task": {
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "keep",
+              "reject"
+            ],
+            "description": "An interrupted decision must be retried as-is."
+          }
+        }
+      }
+    },
+    "episode_removed": {
+      "type": "boolean",
+      "description": "Successful review-mode Stop had no payload and removed the empty episode; do not offer Keep/Reject."
     }
   }
 }
