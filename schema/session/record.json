@@ -57,18 +57,25 @@
     "tags": {
       "type": "array",
       "items": {
-        "type": "string"
-      }
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "maxItems": 8,
+      "description": "episode_start only: labels stored with the episode. They can select recorder behaviour (\"aspire\" = the long action-silence window for agent takes)."
     },
     "outcome": {
       "enum": [
         "success",
         "failure",
         "aborted"
-      ]
+      ],
+      "description": "episode_stop only. Omitted = success (a human stop). An unknown value is refused with record_status ok:false, never stored as success."
     },
     "notes": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 2000,
+      "description": "episode_stop only: free text stored with the episode."
     }
   }
 }
