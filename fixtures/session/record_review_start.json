@@ -1,0 +1,7 @@
+{
+  "type": "record",
+  "action": "episode_start",
+  "task": "issue38",
+  "review_required": true,
+  "request_id": "review-start-1"
+}

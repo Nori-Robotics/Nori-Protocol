@@ -254,6 +254,11 @@ internet, either:
   rendezvous). The `@nori/sdk` TypeScript package speaks this end-to-end; re-implementing it in
   another language is more work than the tunnel option.
 
+For dataset recording, read [Recording compatibility](README.md#recording-compatibility)
+before choosing verbs. Review is an opt-in L3 extension: discover support before
+starting, await correlated decisions by stable episode ID, and retain the
+legacy L2/L3 distinctions for stop and discard.
+
 ## Reference
 
 - `schema/*.json` — the canonical message definitions (Draft 2020-12). Validate against these.
