@@ -37,7 +37,7 @@
     "episodes_kept": {
       "type": "integer",
       "minimum": 0,
-      "description": "Episodes kept in this gateway collection. Review-mode Stop does not increment; successful Keep does, once per ID. Legacy Stop counts immediately. This is not upload status."
+      "description": "New Keep decisions acknowledged in this gateway collection. Review-mode Stop does not increment. Replaying an already-applied Keep never increments a new collection or connection; cached replies report the current count. Reset on session_start/new connection. Legacy Stop counts immediately. This is not historical saved-count or upload status."
     },
     "episode": {
       "type": [
