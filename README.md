@@ -117,15 +117,29 @@ episode_start {review_required:true}
 
 Only the new decision verbs require `episode_id`. It is the stable identifier
 returned by Start/Stop, distinct from display-only `episode`. Keep releases the
-hold; Reject deletes only that pending take. `review_status` recovers the
+hold; Reject durably quarantines only that pending take before acknowledging;
+background cleanup reclaims its files. `review_status` recovers the
 operator's pending reviews after reconnect. A legacy `session_end` or disconnect
 does not release a hold. `OUTCOME_DISCARDED` retains its existing L3 meaning:
 retained raw data marked discarded, rather than explicit review deletion.
 
-For correlated calls, use one request at a time and retry the same ID only for
-the identical operation. The gateway caches 128 replies per connection. Never
+Clients should sequence mutations and retry the same ID only for the identical
+operation. Capture and review use separate gateway lanes for both correlated
+and legacy requests, so review does not block Stop. The gateway caches 128
+successful replies per connection; temporary refusals and errors are not cached.
+Cached replies report the current collection's kept count. A replay of an
+already-applied Keep never increments a new collection/connection's count.
+Never
 let an absent or mismatched `request_id` complete a newer waiter. After
 reconnect, recover review state and retry Keep/Reject by stable episode ID.
+Recorder service calls time out after 5 seconds; late replies cannot complete
+another call. A timeout does not cancel work already accepted by the recorder:
+recover status before another mutation, especially Start. Durable completed
+decision receipts have a 30-day replay window. Expired decisions may return
+not-reviewable; retries cannot resurrect a take. Incomplete decisions never
+expire. Review takes require explicit decisions and never automatically Keep or
+Reject. Configurable held-storage limits can refuse new review capture or stop
+an active capture into review; physical free-space checks still apply.
 
 Existing stack differences remain important:
 

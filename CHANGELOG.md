@@ -22,6 +22,9 @@ turned out to be the question that costs the most to answer after the fact.
   existing required fields. Validation includes negative decision cases and
   legacy field-limit checks. Clarified correlation, reserved-tag behavior,
   and unchanged L2/L3 stop/discard differences.
+- Clarified successful-reply caching, retryable refusals, bounded service calls,
+  independent capture/review lanes, once-only Keep counting, durable Reject
+  quarantine, held-storage limits and the 30-day completed-decision replay window.
 
 ## 2026-08-28 — opt-in LiDAR and IMU streams (additive)
 
