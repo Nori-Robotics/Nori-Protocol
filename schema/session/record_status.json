@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/session/record_status.json",
   "title": "record_status",
-  "description": "Robot -> client. The reply to every record verb, and the whole recording state each time -- it is a snapshot, not a delta, so a client that misses one is not left inconsistent.\n\n`ok: false` is an ordinary outcome, not a transport error: \"already recording an episode\", \"not recording\", \"nothing to discard\", \"already uploaded -- cannot discard\". A client polling with action \"status\" against a robot that has recording disabled will see ok:false routinely, so treat it as state rather than raising.\n\nField availability depends on stack and service support. Older L2/L3 peers omit the review fields and request_id; only type and ok are required. A supporting L3 gateway echoes request_id only when supplied. Treat absent review_supported as unsupported and never satisfy a correlated waiter with an uncorrelated legacy reply.",
+  "description": "Robot -> client. The reply to every record verb, and the whole recording state each time -- it is a snapshot, not a delta, so a client that misses one is not left inconsistent.\n\n`ok: false` is an ordinary outcome, not a transport error: \"already recording an episode\", \"not recording\", \"nothing to discard\", \"already uploaded -- cannot discard\". A client polling with action \"status\" against a robot that has recording disabled will see ok:false routinely, so treat it as state rather than raising.\n\nField availability depends on stack and service support. Older L2/A3 peers omit the review fields and request_id; only type and ok are required. A supporting A3 gateway echoes request_id only when supplied. Treat absent review_supported as unsupported and never satisfy a correlated waiter with an uncorrelated legacy reply.",
   "type": "object",
   "required": [
     "type",
@@ -25,14 +25,14 @@
     },
     "stereo": {
       "type": "boolean",
-      "description": "L3: echoed on every reply while a session opened with stereo capture is open, and only then -- the UI reports stereo enforcement solely from this echo, so a robot predating the vocabulary stays silent rather than promising. Fixed at session open; a mid-session flag on the verb is ignored."
+      "description": "A3: echoed on every reply while a session opened with stereo capture is open, and only then -- the UI reports stereo enforcement solely from this echo, so a robot predating the vocabulary stays silent rather than promising. Fixed at session open; a mid-session flag on the verb is ignored."
     },
     "session": {
       "type": [
         "string",
         "null"
       ],
-      "description": "L2: the session directory name, e.g. \"20260729T201358Z-nori-l2-1002\". Absent on L3, which has no session directory."
+      "description": "L2: the session directory name, e.g. \"20260729T201358Z-nori-l2-1002\". Absent on A3, which has no session directory."
     },
     "episodes_kept": {
       "type": "integer",
@@ -44,7 +44,7 @@
         "string",
         "null"
       ],
-      "description": "Display ID of the open episode, or null when none is open. Accept both L3 episode-NNNN and L2 <session>/episode-NNNN shapes. Match the trailing segment for the episode number. On review-capable L3, use the separate stable episode_id for Keep/Reject; the display ID is not a review identifier."
+      "description": "Display ID of the open episode, or null when none is open. Accept both A3 episode-NNNN and L2 <session>/episode-NNNN shapes. Match the trailing segment for the episode number. On review-capable A3, use the separate stable episode_id for Keep/Reject; the display ID is not a review identifier."
     },
     "free_gb": {
       "type": "number",
@@ -66,13 +66,13 @@
     },
     "error": {
       "type": "string",
-      "description": "Set when ok is false. NOT guaranteed present: the L3 gateway can emit ok:false with an empty service message, which it then omits. Do not rely on this to explain a failure."
+      "description": "Set when ok is false. NOT guaranteed present: the A3 gateway can emit ok:false with an empty service message, which it then omits. Do not rely on this to explain a failure."
     },
     "request_id": {
       "type": "string",
       "minLength": 1,
       "maxLength": 128,
-      "description": "Echoed for a correlated request on supporting L3 gateways; omitted for legacy requests and older peers. An absent or different ID cannot complete a correlated request."
+      "description": "Echoed for a correlated request on supporting A3 gateways; omitted for legacy requests and older peers. An absent or different ID cannot complete a correlated request."
     },
     "review_supported": {
       "type": "boolean",

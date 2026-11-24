@@ -22,7 +22,7 @@
     },
     "reason": {
       "type": "string",
-      "description": "Machine-readable cause when offline. Open set -- treat an unknown value as 'offline for a reason this client does not model', never as an error. L3 sends \"unauthorized\" (motion authority refused) or \"unreachable\" (motion disabled or daemon down). The L2 bridge sends \"connection_lost\" when the daemon closes the socket -- the most common value in practice -- or forwards the daemon's own fatal error code, e.g. \"startup_positions\", \"bus_lost\", \"version_mismatch\"."
+      "description": "Machine-readable cause when offline. Open set -- treat an unknown value as 'offline for a reason this client does not model', never as an error. A3 sends \"unauthorized\" (motion authority refused) or \"unreachable\" (motion disabled or daemon down). The L2 bridge sends \"connection_lost\" when the daemon closes the socket -- the most common value in practice -- or forwards the daemon's own fatal error code, e.g. \"startup_positions\", \"bus_lost\", \"version_mismatch\"."
     },
     "detail": {
       "type": "string",

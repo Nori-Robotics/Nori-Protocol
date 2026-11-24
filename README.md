@@ -26,9 +26,9 @@ intercepts the session-only verbs (`video`, `call`, `record`, `policy_stream`) a
 others (`camera_layout`, `daemon_status`) that no daemon could report about itself. Note
 `link` is NOT intercepted: it is forwarded to the daemon, which is why it lives in `daemon/`.
 
-On an **L3** the gateway collapses both roles into one process and speaks the session dialect
-directly. So the session layer is not "the L3 protocol" — it is the layer the app has always
-spoken, which simply had no schema until now. That gap is why the L3 stack was written against
+On an **A3** the gateway collapses both roles into one process and speaks the session dialect
+directly. So the session layer is not "the A3 protocol" — it is the layer the app has always
+spoken, which simply had no schema until now. That gap is why the A3 stack was written against
 a mock robot instead of this repo.
 
 **The session layer is a superset, not a replacement.** `control`, `command`, `link`, `telemetry`,
@@ -53,7 +53,7 @@ is required rather than optional.
 | D→C | `ack` | `schema/daemon/ack.json` |
 | D→C | `telemetry` | `schema/daemon/telemetry.json` |
 | D→C | `error` | `schema/daemon/error.json` |
-| D→C | `alert` | `schema/daemon/alert.json` — idempotent operator-alert state keyed by `code`; L3 gateway emits it today, a daemon may |
+| D→C | `alert` | `schema/daemon/alert.json` — idempotent operator-alert state keyed by `code`; A3 gateway emits it today, a daemon may |
 
 ### Proposed (additive, no version bump — not yet emitted by any robot)
 | Direction | type | schema | notes |
@@ -62,16 +62,16 @@ is required rather than optional.
 
 It validates under `validate.py` today (fixtures included) but is **PROPOSED**: the client side
 is built, the robot side is pending. `control.action_id`, `action_status` and `control.pose`
-graduated to finalized on 2026-08-25 — see the CHANGELOG.
+graduated to finalized — see the CHANGELOG.
 
 ### Session layer (client ⇄ bridge/gateway, over the WebRTC data channel)
-Schema'd 2026-08-13. Every one of these was already in production on both stacks and specified
+Every one of these was already in production on both stacks and specified
 nowhere, which is where most of the 2026-08 audit divergences were found.
 
 | Direction | type | schema | notes |
 |---|---|---|---|
 | C→R | `video` | `schema/session/video.json` | pause/resume, bitrate, or quality — exactly one per frame |
-| C→R | `record` | `schema/session/record.json` | legacy lifecycle plus opt-in L3 review; see recording compatibility below |
+| C→R | `record` | `schema/session/record.json` | legacy lifecycle plus opt-in A3 review; see recording compatibility below |
 | C→R | `policy_stream` | `schema/session/policy_stream.json` | capability-gated |
 | C→R | `call` | `schema/session/call.json` | capability-gated; two-way audio |
 | C→R | `navigation` | `schema/session/navigation.json` | capability `named_navigation`; correlated map-bound waypoint operations |
@@ -82,7 +82,7 @@ nowhere, which is where most of the 2026-08 audit divergences were found.
 | R→C | `imu` | `schema/session/imu.json` | `/imu/data` quaternion, SI vectors and covariance arrays |
 | R→C | `camera_layout` | `schema/session/camera_layout.json` | how to slice the single composited track; **not** derived from `descriptor.cameras` |
 | R→C | `daemon_status` | `schema/session/daemon_status.json` | motion health as seen by the bridge — the daemon cannot report its own absence |
-| R→C | `record_status` | `schema/session/record_status.json` | request_id echo when supplied on supporting L3; legacy replies are uncorrelated |
+| R→C | `record_status` | `schema/session/record_status.json` | request_id echo when supplied on supporting A3; legacy replies are uncorrelated |
 | R→C | `policy_stream_status` | `schema/session/policy_stream_status.json` | reply only — a stream that dies mid-run is observable **only by polling** |
 
 ## Recording compatibility
@@ -96,18 +96,18 @@ against an older closed schema.
 
 | Client and robot | Recording behavior |
 |---|---|
-| Legacy client, updated L3 | Existing start/stop/status and alias behavior is preserved. Stop retains the take for upload; no review hold is inferred. |
-| Review client, supporting L3 | Explicit `review_required: true` holds the stopped take until acknowledged Keep or Reject. |
-| Review client, older L3 or L2 | Review is unsupported. Do not start review-mode capture or assume deletion succeeded. |
+| Legacy client, updated A3 | Existing start/stop/status and alias behavior is preserved. Stop retains the take for upload; no review hold is inferred. |
+| Review client, supporting A3 | Explicit `review_required: true` holds the stopped take until acknowledged Keep or Reject. |
+| Review client, older A3 or L2 | Review is unsupported. Do not start review-mode capture or assume deletion succeeded. |
 
 Discover support through `record_status.review_supported` (`status` on updated
-L3 reports it; `review_status` also lists pending owned reviews). Missing/false
+A3 reports it; `review_status` also lists pending owned reviews). Missing/false
 support or a timed-out/uncorrelated review probe means unsupported. An older
 robot may ignore unknown fields on `episode_start`, so sending
 `review_required: true` without first establishing support can create an
 ordinary uploadable take. The review UI must gate capture before sending Start.
 
-For opted-in L3 recording:
+For opted-in A3 recording:
 
 ```
 episode_start {review_required:true}
@@ -120,7 +120,7 @@ returned by Start/Stop, distinct from display-only `episode`. Keep releases the
 hold; Reject durably quarantines only that pending take before acknowledging;
 background cleanup reclaims its files. `review_status` recovers the
 operator's pending reviews after reconnect. A legacy `session_end` or disconnect
-does not release a hold. `OUTCOME_DISCARDED` retains its existing L3 meaning:
+does not release a hold. `OUTCOME_DISCARDED` retains its existing A3 meaning:
 retained raw data marked discarded, rather than explicit review deletion.
 
 Clients should sequence mutations and retry the same ID only for the identical
@@ -143,7 +143,7 @@ an active capture into review; physical free-space checks still apply.
 
 Existing stack differences remain important:
 
-| Verb | L2 | L3 |
+| Verb | L2 | A3 |
 |---|---|---|
 | `episode_stop` | Keep the episode; leave the session open | Finalize and retain, or hold if explicitly opted into review |
 | `episode_discard` | Drop the active episode | Finalize the active episode with retained DISCARDED outcome; not post-stop deletion |
@@ -159,12 +159,12 @@ as a substitute for targeted `episode_reject`. Notes belong to `episode_stop`
 
 `nori:review-required` is a reserved gateway-to-recorder tag. Clients use the
 `review_required` field instead of supplying that tag. Client-supplied copies are
-ignored by L3; omitting the flag must never accidentally enable a review hold.
+ignored by A3; omitting the flag must never accidentally enable a review hold.
 All other client tags keep the existing limits and behavior.
 
 ## Rules
 - **Framing:** newline-delimited JSON over TCP (TLS on WAN). One object per line, UTF-8.
-- **Versioning:** integer `protocol_version`, asserted in `hello`/`ack`; mismatch ⇒ hard reject. Additive changes do **not** bump the version; a rename/retype/removal bumps it and must break CI here (golden fixtures). *Caveat: hard rejection is the `hello` negotiation, which only the L2 daemon performs. The L3 gateway sends `ack` unprompted with no `hello` and no negotiation, and both SDKs treat a version mismatch as advisory. Reconcile before relying on rejection as a safety property.*
+- **Versioning:** integer `protocol_version`, asserted in `hello`/`ack`; mismatch ⇒ hard reject. Additive changes do **not** bump the version; a rename/retype/removal bumps it and must break CI here (golden fixtures). *Caveat: hard rejection is the `hello` negotiation, which only the L2 daemon performs. The A3 gateway sends `ack` unprompted with no `hello` and no negotiation, and both SDKs treat a version mismatch as advisory. Reconcile before relying on rejection as a safety property.*
 - **Message schemas are strict** — `additionalProperties: false`, or `unevaluatedProperties: false` when the schema extends another — so drift is caught in CI. `validate.py` enforces this. **Runtime parsers must be lenient** — ignore unknown fields — so a future additive field doesn't break an older binary at runtime.
 - **Shared definitions live in `_`-prefixed fragments**, which are exempt from the strictness and fixture-coverage rules because they must stay OPEN. This shape is forced by how JSON Schema composition actually behaves, and two plausible-looking alternatives silently fail: `additionalProperties: false` on a base rejects an extender's new fields (it cannot see properties declared outside its own subschema), and `unevaluatedProperties: false` on a base is no better, since inside a `$ref` it evaluates in its own scope and rejects them too — then, because the base failed, its annotations are dropped and the extender sees nothing as evaluated. The working shape is an open `_core` fragment plus `allOf: [{$ref: _core}], properties: {…}, unevaluatedProperties: false` on each concrete message.
 - **A `_`-prefixed fragment MUST declare `$id`.** `$ref` is resolved through a registry keyed on it; without one, every schema extending the fragment fails to resolve at validation time. `validate.py` fails the build for it rather than crashing.
@@ -177,7 +177,7 @@ python validate.py        # fixtures, schema rules and recording compatibility c
 ```
 Consumers: the robot's on-board daemon, the browser app, the robot's ROS 2 gateway, and both operator SDKs (`@nori/sdk`, `nori-sdk`) — each running `validate.py` plus their own golden-fixture decode tests against `fixtures/`.
 
-> **Status (2026-08-26): all four stacks consume this repo.** Both SDKs run fixture-driven
+> **Status: all four stacks consume this repo.** Both SDKs run fixture-driven
 > conformance suites against it in CI (the Python SDK pins its base-jog emission
 > byte-for-byte against `fixtures/daemon/control_jog_base.json`), and the robot's gateway
 > ships its own conformance tests. The 2026-08 audits found every wire divergence traced to

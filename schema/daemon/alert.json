@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nori.dev/protocol/daemon/alert.json",
   "title": "alert",
-  "description": "Robot -> client operator alert. STATE, not a one-shot toast: a later frame with the same `code` replaces the earlier one, and `active: false` clears it. Additive to v1 -- older clients ignore the unknown type. Schema'd 2026-08-20, descriptively, from the L3 gateway's emitter (the thermal-supervisor stack shipped the frame first; this repo caught up). The frame is generic on purpose: `code` is the machine key a client dedupes and clears on, `severity` is the only rendering input, and everything condition-specific rides optional context fields, so a new alert kind is a new `code` value, not a new message type.",
+  "description": "Robot -> client operator alert. STATE, not a one-shot toast: a later frame with the same `code` replaces the earlier one, and `active: false` clears it. Additive to v1 -- older clients ignore the unknown type. Schema'd descriptively from the A3 gateway's emitter (the thermal-supervisor stack shipped the frame first; this repo caught up). The frame is generic on purpose: `code` is the machine key a client dedupes and clears on, `severity` is the only rendering input, and everything condition-specific rides optional context fields, so a new alert kind is a new `code` value, not a new message type.",
   "type": "object",
   "required": [
     "type",

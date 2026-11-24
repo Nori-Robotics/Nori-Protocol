@@ -9,19 +9,29 @@ or **breaking** (bumps `VERSION` and must break every consumer's CI).
 This file exists because "when did this field appear, and which robots have it?"
 turned out to be the question that costs the most to answer after the fact.
 
-## 2026-11-10 — explicit L3 episode review (additive)
+## 2026-11-24 — `action_id` on jog frames labels recorded command markers (additive)
+
+- No new field. An `action_id` on a jog-only `control` frame was already valid
+  and ignored; the robot now records it as the `command_id` of the start/end
+  rows it writes into the episode bundle for that jog. Send the same id on every
+  frame of one jog, including the closing zero; a new id starts a new row.
+- Jog frames still produce no `action_status`. Clients that omit the id are
+  unaffected: the rows are written without a `command_id`. No protocol version
+  bump.
+
+## 2026-11-10 — explicit A3 episode review (additive)
 
 - Added opt-in `review_required` capture, stable `episode_id`, `review_status`,
   `episode_keep` and `episode_reject`. Pending takes survive restart and cannot
   register or upload until kept. Reject deletes only the named pending episode.
 - Added correlated `request_id` replies/replay and `review_supported` discovery.
   Clients await acknowledgements and recover pending reviews after reconnect.
-- Existing unreviewed recording and retained L3 DISCARDED outcomes are unchanged.
+- Existing unreviewed recording and retained A3 DISCARDED outcomes are unchanged.
   L2 does not implement the extension. No protocol version bump.
 - Require `episode_id` only for Keep/Reject; legacy requests retain their
   existing required fields. Validation includes negative decision cases and
   legacy field-limit checks. Clarified correlation, reserved-tag behavior,
-  and unchanged L2/L3 stop/discard differences.
+  and unchanged L2/A3 stop/discard differences.
 - Clarified successful-reply caching, retryable refusals, bounded service calls,
   independent capture/review lanes, once-only Keep counting, durable Reject
   quarantine, held-storage limits and the 30-day completed-decision replay window.
@@ -54,13 +64,13 @@ turned out to be the question that costs the most to answer after the fact.
 ## 2026-08-26 — `yaw` task-jog short; `shoulder_pan` deprecated as its alias (additive)
 
 - **`yaw` is the canonical task-space short** for the angular-z of the base-frame twist
-  on twist-class robots (L3/A3): accepted in `control.arm_jog` task shorts and advertised
+  on twist-class robots (A3): accepted in `control.arm_jog` task shorts and advertised
   in `jog_scale.task`. **`shoulder_pan` remains as a DEPRECATED ALIAS** with identical
   twist-class semantics — existing clients keep working unchanged. If both are held,
   `yaw` wins deterministically (never summed). **L2 semantics unchanged**: L2 keeps its
   historical `shoulder_pan` orbit and ignores `yaw` as an unknown key. `roll` (twist
   ang_x) is documented as RESERVED — not accepted, ang_x stays 0.0. No `VERSION` bump.
-- **`descriptor.ranges_si` is now actually published by the A3/L3 gateway.** The field
+- **`descriptor.ranges_si` is now actually published by the A3 gateway.** The field
   was already specified (ack.json, fixtures, MODELS.md "Real angles from a normalized
   wire") but no implementation emitted it, so clients were denormalizing telemetry via
   URDF nominal limits — wrong by each unit's calibration offset, silently (observed live
@@ -81,7 +91,7 @@ turned out to be the question that costs the most to answer after the fact.
   negation — and the gateway stopped un-negating `angular`. The L2-era negation survives
   only inside the TS SDK's positive L2 model gate. **No `VERSION` bump**: this is the
   implementations converging on what v1 always specified, not a wire change. Rollout: the
-  gateway and clients must deploy together across this boundary on A3/L3 units — a
+  gateway and clients must deploy together across this boundary on A3 units — a
   new-client/old-gateway (or old/new) pairing inverts `angular`.
 
 ## 2026-08-23 — PROPOSED: `control.pose` + capability `pose_targets` (additive)
@@ -114,7 +124,7 @@ this time instead of three weeks later.
   along while the schema knew only the L2's paired `left_lift`/`right_lift`: the
   two-namespaces failure shape, this time between models. Both spellings now exist;
   `descriptor.aux` says which one a robot honors.
-- **`record_status.stereo`** — the L3 gateway echoes it on every reply while a
+- **`record_status.stereo`** — the A3 gateway echoes it on every reply while a
   stereo-capture session is open (the app pins that contract); the schema rejected the
   field. Pinned as a strict xfail in the gateway suite since 2026-08-20, now closed.
   Fixture: `record_status_stereo.json`.
@@ -124,7 +134,7 @@ this time instead of three weeks later.
 
 ## 2026-08-20 — `alert` frames schema'd (additive, retroactive)
 
-The L3 gateway began emitting robot-owned operator alerts (`servo_thermal`, with the
+The A3 gateway began emitting robot-owned operator alerts (`servo_thermal`, with the
 thermal-supervisor stack) before any schema existed — a whole new message TYPE with no
 contract, one level up from the `servo_temps` field drift of 2026-08-12, and caught the
 same way: the gateway's conformance suite pinned the gap
@@ -137,7 +147,7 @@ as a strict xfail on the day of the merge.
   context rides optional fields (`hottest_c`, `joint`, `latched`), so a new alert kind is
   a new `code` value, not a new message type. Unknown codes MUST render generically, not
   error. Lives under `daemon/` because a daemon can legitimately originate one (thermal),
-  even though the L3 gateway is today's only emitter.
+  even though the A3 gateway is today's only emitter.
 - New fixtures: `alert_thermal_latched.json`, `alert_cleared.json`.
 
 ## 2026-08-20 — `descriptor.jog_scale` (additive)
@@ -186,8 +196,8 @@ No new message types and no field renames. A pre-commit security pass over the d
 
 ## 2026-08-13 — corrections from an adversarial review of the session layer
 
-The session schemas below were written against the L3 gateway and the TypeScript client, and
-verified against L3 output only. An audit against the **L2 daemon, bridge and recorder** found
+The session schemas below were written against the A3 gateway and the TypeScript client, and
+verified against A3 output only. An audit against the **L2 daemon, bridge and recorder** found
 that several rejected what deployed L2 units actually send. No robot changed; the schemas were
 wrong. Everything here is descriptive: **no deployed unit is expected to conform to anything it
 did not already do.**
@@ -196,11 +206,11 @@ Rejected real L2 output, now accepted:
 - `telemetry` — the L2 bridge injects `robot_mic_live`, `robot_local_mic_muted` and
   `battery_percent` into every relayed frame. This is the `servo_temps` failure repeating
   inside the commit that documented `servo_temps`.
-- `telemetry.status` no longer requires `link` (L2-only; L3's `safety_status()` never sets it,
-  so requiring it rejected every L3 frame carrying a status block).
+- `telemetry.status` no longer requires `link` (L2-only; A3's `safety_status()` never sets it,
+  so requiring it rejected every A3 frame carrying a status block).
 - `record_status` — added `session`, `dropped_frames_est`, `queue_drops`; `episode` now accepts
-  BOTH `episode-NNNN` (L3) and `<session>/episode-NNNN` (L2); `error` no longer required when
-  `ok` is false, since L3 can omit an empty service message.
+  BOTH `episode-NNNN` (A3) and `<session>/episode-NNNN` (L2); `error` no longer required when
+  `ok` is false, since A3 can omit an empty service message.
 - `daemon/command` — accepts the flag form `{"estop": true}` that every deployed client sends,
   alongside the original `{name, token}`. The separate `session/command.json` added earlier
   was deleted: its stated justification (bridge translation, token injection) does not happen.
@@ -237,7 +247,7 @@ Tooling and process:
 
 No wire change: every message below was already in production on both stacks. They were
 simply specified nowhere, because this repo was deliberately scoped to the daemon contract
-back when the bridge and the daemon were separate processes. The L3 gateway merged those
+back when the bridge and the daemon were separate processes. The A3 gateway merged those
 roles, so the unspecified half is now most of what a client actually speaks — and it is where
 most of the 2026-08 audit divergences were found.
 
@@ -254,7 +264,7 @@ most of the 2026-08 audit divergences were found.
   `discard_last`, `session_discard`) are documented as retained-for-deployed-clients;
   `policy_stream_status` arrives unsolicited when a stream dies, and its `ok` defaults to
   false rather than true.
-- Verification at the time was **L3 output only**, and that turned out to be the flaw rather
+- Verification at the time was **A3 output only**, and that turned out to be the flaw rather
   than the assurance — see the correction entry above. Nothing about the L2 bridge or the L2
   recorder was checked, which is where every subsequent finding was.
 
@@ -277,11 +287,11 @@ Note what this does **not** cover: implementation drift. It proves the schemas
 and fixtures agree with each other, not that any daemon or client agrees with
 them. See the 2026-08-12 `servo_temps` entry for what that costs.
 
-## 2026-08-13 — `model`, `capabilities`, L3 joint vocabulary (additive)
+## 2026-08-13 — `model`, `capabilities`, A3 joint vocabulary (additive)
 
 Landed as `40dd3bc`.
 
-- **`ack.model`** — advisory model/generation label (`"L2"`, `"L3"`). Deliberately
+- **`ack.model`** — advisory model/generation label (`"L2"`, `"A3"`). Deliberately
   a free string, not an enum: enumerating models here would mean a schema edit per
   model, which is the coupling the field exists to avoid. Clients MUST NOT branch
   on it; branch on `descriptor` and `capabilities`. See `MODELS.md`.
@@ -290,9 +300,9 @@ Landed as `40dd3bc`.
   policy streaming) are not expressible as DOFs. Absent means *unknown*, not
   *none*. Unrecognised entries must be ignored, not rejected.
 - **`control.jog.<arm>` reopened.** It was `additionalProperties: false` over the
-  six L2 task-space DOFs, which made every L3 joint (`shoulder_pitch`,
+  six L2 task-space DOFs, which made every A3 joint (`shoulder_pitch`,
   `bicep_yaw`, `elbow_pitch`, …) schema-**invalid** — the canonical spec could not
-  describe an L3 arm at all. It now accepts descriptor-declared joint shorts
+  describe an A3 arm at all. It now accepts descriptor-declared joint shorts
   alongside the task-space verbs, with the routing rule documented.
 - **Base sign convention made normative**: `+linear` forward, `+angular` left
   (ROS REP-103), no client-side negation, robots compensate internally. Both
