@@ -255,9 +255,9 @@ internet, either:
   another language is more work than the tunnel option.
 
 For dataset recording, read [Recording compatibility](README.md#recording-compatibility)
-before choosing verbs. Review is an opt-in L3 extension: discover support before
+before choosing verbs. Review is an opt-in A3 extension: discover support before
 starting, await correlated decisions by stable episode ID, and retain the
-legacy L2/L3 distinctions for stop and discard.
+legacy L2/A3 distinctions for stop and discard.
 
 ## Reference
 

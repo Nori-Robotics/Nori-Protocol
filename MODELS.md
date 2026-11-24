@@ -6,7 +6,7 @@ How a client works out what it is talking to, and what it may do with it.
 
 **Branch on `descriptor` and `capabilities`. Never on `model`.**
 
-A client that switches behaviour on the string `"L3"` needs editing every time a
+A client that switches behaviour on the string `"A3"` needs editing every time a
 model ships. A client that reads the descriptor works against hardware that did
 not exist when it was written. `model` is in the `ack` so that logs, dataset
 provenance and bug reports can *name* the hardware — it is not a control input.
@@ -42,7 +42,7 @@ a robot accepts absolute lift height targets, honours leader-arm degrees, runs a
 policy streamer, or carries two-way audio. Those differences are large between
 current models and a client has no other way to discover them:
 
-| Capability | L2 | L3 |
+| Capability | L2 | A3 |
 |---|---|---|
 | `task_jog` — cylindrical/task-space arm jog | yes | yes (base-frame twist; `yaw` (canonical) / `shoulder_pan` (deprecated alias) yaws about base Z) |
 | `record` — dataset recording verbs | yes | yes (same 11 verbs; `discard` differs in MEANING — see session/record.json) |
@@ -51,7 +51,7 @@ current models and a client has no other way to discover them:
 | `policy_stream` | yes | **no** |
 | `call` — two-way audio | yes | **no** |
 | `perception` | schema only, unimplemented | **no** |
-| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized 2026-08-25; the robot's gateway advertises and serves it whenever its motion stack is up (hardware-verified through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
+| `pose_targets` — absolute Cartesian pose targets, solved on-robot (`control.pose`) | **no** | **yes** — finalized; the robot's gateway advertises and serves it whenever its motion stack is up (hardware-verified through the full lifecycle). Still gate on the capability: a robot without it drops the frame in silence |
 | `named_navigation` — map-bound named waypoint operations | **no** | **yes** when the navigation manager is available |
 | `sensor_streams` — opt-in filtered LiDAR and IMU session frames | **no** | **yes**; publisher presence is reported separately in `sensor_stream_status` |
 
@@ -81,7 +81,7 @@ A robot whose hardware turns the other way compensates in its own actuator
 adapter, internally. Never on the wire, and never in a shared client library —
 a per-model quirk fixed in shared code becomes every other model's bug.
 
-> **Status: reconciled (2026-08-25).** `fixtures/daemon/control_jog_base.json`
+> **Status: reconciled.** `fixtures/daemon/control_jog_base.json`
 > now describes what every client emits and what the gateway consumes: no
 > negation on either side. The one surviving exception is the DEPLOYED L2
 > fleet, whose frozen firmware turns opposite on `angular` — that flip lives
@@ -174,12 +174,12 @@ is to say "unknown", not to substitute nominal limits.
 A robot composites all of its cameras into one frame and sends a single H.264
 track; the tiling is described by `camera_layout` (`cols`, `rows`, `tiles`),
 which is authoritative and independent of the descriptor. Clients crop tiles
-from the composite using that frame. This is why L2 and L3 behave identically in
+from the composite using that frame. This is why L2 and A3 behave identically in
 the app despite L2 sending no descriptor at all, and why a mock must NOT derive
 its layout from `descriptor.cameras` — real robots derive it from the live
 compositor. This is a rule to adopt, not a description of today: the TS mock
 (`mock/sim.ts` cameraLayoutFrame) derives its layout from the descriptor, and the
-L3 gateway was written against that mock.
+A3 gateway was written against that mock.
 
 ## Current models
 
@@ -189,7 +189,7 @@ two dedicated lift servos with a millimetre height frame, `hello` handshake with
 hard version rejection, single-client NDJSON arbitration. Sends no descriptor.
 Fixture: `fixtures/daemon/ack_l2_legacy.json`.
 
-**L3** — 16 joints, 7-DOF arms plus gripper
+**A3** — 16 joints, 7-DOF arms plus gripper
 (`shoulder_pitch, shoulder_roll, bicep_yaw, elbow_pitch, forearm_yaw,
 wrist_pitch, wrist_roll, gripper`), lifts implemented as arm shoulder-lift
 joints (jog only), no `hello` (auth moved upstream to the signaling room),
@@ -204,15 +204,15 @@ specified explicitly above rather than left to inference.
 
 The fixtures here are the target. These are the known deltas:
 
-- **L3 `descriptor.aux` is `[]`** while the robot accepts `left_lift`/`right_lift`
+- **A3 `descriptor.aux` is `[]`** while the robot accepts `left_lift`/`right_lift`
   jog and reports `<side>_lift.pos` telemetry. The lifts are undiscoverable. Fix
   the gateway to populate `aux`.
-- **L3 emits no `descriptor.cameras` and no `descriptor.buses`.** `cameras` is
+- **A3 emits no `descriptor.cameras` and no `descriptor.buses`.** `cameras` is
   cheap to add from the compositor roles and useful in logs; `buses` may stay
   absent.
 - **Neither stack emits `model` or `capabilities`** — both fields are new here.
 - **Base sign convention** — see above.
-- **(Historical, resolved 2026-08-26.)** The app and the gateway once consumed no schema
+- **(Historical, resolved.)** The app and the gateway once consumed no schema
   at all, which is how the deviations above drifted; every stack now runs conformance
   against this repo.
 
@@ -221,5 +221,5 @@ The fixtures here are the target. These are the known deltas:
 `model` and `capabilities` are **optional additions to v1**, not a breaking
 change: a client that ignores them behaves exactly as before, and a robot that
 omits them is handled by the "absent means unknown/legacy" rules. Same reasoning
-as the `left_lift.pos` addition of 2026-07-02 — additive under existing
+as the `left_lift.pos` addition — additive under existing
 patterns, no `protocol_version` bump. `VERSION` stays at 1.
